@@ -2,11 +2,7 @@ import { promises as fs } from "fs";
 import path from "path";
 import { CustomClient } from "../Request/customclient";
 
-export async function readCommands(
-  client: CustomClient,
-  userMP: string,
-  dir: string
-) {
+export async function readCommands(client: CustomClient, dir: string) {
   try {
     const files = await fs.readdir(dir);
 
@@ -16,7 +12,7 @@ export async function readCommands(
         const stat = await fs.stat(fullPath);
 
         if (stat.isDirectory()) {
-          await readCommands(client, userMP, fullPath);
+          await readCommands(client, fullPath);
         } else if (file.endsWith(".js")) {
           try {
             const command = await import(fullPath);

@@ -2,7 +2,7 @@ import { readdirSync, statSync } from "fs";
 import path from "path";
 import { CustomClient } from "../Request/customclient";
 
-export function readEvents(client: CustomClient, userMP: string, dir: string) {
+export function readEvents(client: CustomClient, dir: string) {
   const files = readdirSync(dir);
 
   for (const file of files) {
@@ -10,7 +10,7 @@ export function readEvents(client: CustomClient, userMP: string, dir: string) {
     const stat = statSync(fullPath);
 
     if (stat.isDirectory()) {
-      readEvents(client, userMP, fullPath);
+      readEvents(client, fullPath);
     } else if (file.endsWith(".js")) {
       try {
         const event = require(fullPath);
