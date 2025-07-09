@@ -1,5 +1,5 @@
 import { ActivityType } from "discord.js";
-import { CustomClient } from "../requestarr/customclient";
+import { CustomClient } from "../Requestarr/customclient";
 
 export async function setStatus(client: CustomClient) {
   const isDevelopment = process.env.NODE_ENV === "development";

@@ -1,6 +1,6 @@
 import axios from "axios";
 import { ColorResolvable, EmbedBuilder } from "discord.js";
-import { CustomClient } from "../requestarr/customclient";
+import { CustomClient } from "../Requestarr/customclient";
 import {
   DAYS_OF_WEEK,
   DAY_COLORS,
