@@ -5,8 +5,8 @@ import { partials } from "./client/partials";
 import { ENV } from "./config/env";
 import { readCommands } from "./Handler/commandhandler";
 import { readEvents } from "./Handler/eventhandler";
-import { Command, CustomClient } from "./Requestarr/customclient";
-import { registerCommands } from "./Requestarr/deploy";
+import { Command, CustomClient } from "./requestarr/customclient";
+import { registerCommands } from "./requestarr/deploy";
 import { logError } from "./utils/logger";
 
 export const client = new Client({

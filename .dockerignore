@@ -1,48 +1,8 @@
-# Node modules
-node_modules
-
-# Build output
-/dist
-
-# TypeScript cache
-*.tsbuildinfo
-
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# OS files
-.DS_Store
-Thumbs.db
-
-# Git
-.git
-.gitignore
-
-# Environment & secrets
-.env
-.env.*
-
-# Docker
+README.md
+LICENSE
+.drone.yml
 Dockerfile
 docker-compose.yml
-
-# IDE/editor
-.vscode
-.idea
-*.swp
-
-# Tests/coverage
-coverage
-*.lcov
-
-# Misc
-*.tgz
-*.bak
-*.tmp
-
-# Local config
-*.local.*
+assets
+LICENSE
+.gitignore

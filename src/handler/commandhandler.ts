@@ -1,6 +1,6 @@
 import { promises as fs } from "fs";
 import path from "path";
-import { CustomClient } from "../Requestarr/customclient";
+import { CustomClient } from "../requestarr/customclient";
 
 export async function readCommands(client: CustomClient, dir: string) {
   try {
@@ -13,7 +13,7 @@ export async function readCommands(client: CustomClient, dir: string) {
 
         if (stat.isDirectory()) {
           await readCommands(client, fullPath);
-        } else if (file.endsWith(".js")) {
+        } else if (file.endsWith(".js") || file.endsWith(".ts")) {
           try {
             const command = await import(fullPath);
 
