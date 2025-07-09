@@ -1,5 +1,5 @@
 import cron from "node-cron";
-import { CustomClient } from "../Request/customclient";
+import { CustomClient } from "../Requestarr/customclient";
 import { sendTodayAnimeUpdate } from "../events/animeSchedule";
 import { formatDate } from "../utils/dateFormatter";
 import { generateASCII } from "../utils/generateASCII";
