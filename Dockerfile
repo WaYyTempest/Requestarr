@@ -10,6 +10,7 @@ COPY tsconfig.json ./
 USER root
 
 RUN npm install
+RUN npm install typescript
 
 COPY src ./src
 COPY . .
