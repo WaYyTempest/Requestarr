@@ -8,7 +8,7 @@ import {
   SlashCommandBuilder,
 } from "discord.js";
 import { createEmbedTemplate } from "../modules/embed";
-import { CustomClient } from "../requestarr/customclient";
+import { CustomClient } from "../Requestarr/customclient";
 interface Anime {
   mal_id: number;
   title: string;

@@ -11,7 +11,7 @@ import {
 } from "discord.js";
 import dotenv from "dotenv";
 import { createEmbedTemplate } from "../modules/embed";
-import { CustomClient } from "../requestarr/customclient";
+import { CustomClient } from "../Requestarr/customclient";
 import { logInfo, logError } from "../utils/logger";
 
 dotenv.config();

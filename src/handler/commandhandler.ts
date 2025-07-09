@@ -1,6 +1,6 @@
 import { promises as fs } from "fs";
 import path from "path";
-import { CustomClient } from "../requestarr/customclient";
+import { CustomClient } from "../Requestarr/customclient";
 
 export async function readCommands(client: CustomClient, dir: string) {
   try {
