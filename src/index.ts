@@ -1,12 +1,13 @@
-import { Client, Collection } from "discord.js";
+import { Client, Collection, EmbedBuilder } from "discord.js";
 import path from "path";
 import { intents } from "./client/intents.js";
 import { partials } from "./client/partials.js";
 import { ENV } from "./config/env.js";
-import { readCommands } from "./Handler/commandHandler.js";
-import { readEvents } from "./Handler/eventHandler";
+import { readCommands } from "./Handler/commandhandler.js";
+import { readEvents } from "./Handler/eventhandler.js";
 import { Command, CustomClient } from "./Request/customclient.js";
 import { logError } from "./utils/logger.js";
+import { registerCommands } from "./Request/deploy.js";
 
 export const client = new Client({
   intents,
@@ -22,6 +23,7 @@ async function main() {
 
     readCommands(client, path.join(__dirname, "commands"));
     readEvents(client, path.join(__dirname, "events"));
+    await registerCommands();
   } catch (error) {
     logError("Error during bot initialization", error);
     process.exit(1);
@@ -29,9 +31,109 @@ async function main() {
 }
 main();
 
-process.on("uncaughtException", (error) =>
-  logError("Uncaught Exception", error)
-);
-process.on("unhandledRejection", (reason) =>
-  logError("Unhandled Rejection", reason)
-);
+const userMP = process.env.OWNER;
+
+process.on("uncaughtException", async (error) => {
+  logError("Uncaught Exception", error);
+  if (!userMP || process.env.TraceError !== "true") return;
+  try {
+    const user = await client.users.fetch(userMP);
+    if (user) {
+      const now = new Date();
+      const dateStr = `${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()} at ${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}`;
+      const embedBotCrashed = new EmbedBuilder()
+        .setTitle("__Internal Error Detected__")
+        .setDescription(`<@${userMP}> A crash has been detected! Please investigate.`)
+        .addFields(
+          { name: "Date and Time", value: dateStr, inline: false },
+          { name: "Error Message", value: `\
+\
+\
+${error.message}\
+\
+\
+`, inline: false },
+          { name: "Stack Trace", value: `\
+\
+\
+${error.stack ? error.stack : "No stack trace available"}\
+\
+\
+`, inline: false },
+          { name: "Error Source", value: `\
+\
+\
+${error.stack ? error.stack.split("\n")[0] : "No source available"}\
+\
+\
+`, inline: false },
+          { name: "Error Name", value: error.name || "Unknown", inline: true }
+        )
+        .setColor("DarkRed")
+        .setTimestamp()
+        .setFooter({
+          text: `${client.user?.username} | Error Reporting System`,
+          iconURL: client.user?.avatarURL() || undefined,
+        });
+      user.send({ embeds: [embedBotCrashed] })
+        .then(() => console.log(`DM sent to ${user.username}`))
+        .catch((err) => console.error(`Error sending DM to ${user.username}:`, err));
+    } else {
+      console.error(`User with ID ${userMP} not found.`);
+    }
+  } catch (err) {
+    console.error(`Error fetching user with ID ${userMP}:`, err);
+  }
+});
+
+process.on("unhandledRejection", async (reason: any) => {
+  logError("Unhandled Rejection", reason);
+  if (!userMP || process.env.TraceError !== "true") return;
+  try {
+    const user = await client.users.fetch(userMP);
+    if (user) {
+      const now = new Date();
+      const dateStr = `${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()} at ${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}`;
+      const embedBotCrashed = new EmbedBuilder()
+        .setTitle("__Unhandled Promise Rejection__")
+        .setDescription(`<@${userMP}> A crash has been detected! Please investigate.`)
+        .addFields(
+          { name: "Date and Time", value: dateStr, inline: false },
+          { name: "Error", value: `\
+\
+\
+${reason instanceof Error ? reason.message : String(reason)}\
+\
+\
+`, inline: false },
+          { name: "Stack Trace", value: `\
+\
+\
+${reason instanceof Error && reason.stack ? reason.stack : "No stack trace available"}\
+\
+\
+`, inline: false },
+          { name: "Error Source", value: `\
+\
+\
+${reason instanceof Error && reason.stack ? reason.stack.split("\n")[0] : "No source available"}\
+\
+\
+`, inline: false }
+        )
+        .setColor("DarkRed")
+        .setTimestamp()
+        .setFooter({
+          text: `${client.user?.username} | Error Reporting System`,
+          iconURL: client.user?.avatarURL() || undefined,
+        });
+      user.send({ embeds: [embedBotCrashed] })
+        .then(() => console.log(`DM sent to ${user.username}`))
+        .catch((err) => console.error(`Error sending DM to ${user.username}:`, err));
+    } else {
+      console.error(`User with ID ${userMP} not found.`);
+    }
+  } catch (err) {
+    console.error(`Error fetching user with ID ${userMP}:`, err);
+  }
+});

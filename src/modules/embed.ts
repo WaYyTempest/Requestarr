@@ -1,30 +1,33 @@
-import { Client, EmbedBuilder, User } from "discord.js";
+import { Client, EmbedBuilder, User, ColorResolvable } from "discord.js";
 
 /**
- * Crée un embed de base avec les paramètres fournis.
- * @param title Le titre de l'embed.
- * @param description La description de l'embed.
- * @param interaction L'utilisateur qui a initié l'interaction.
- * @param client Le client Discord pour obtenir le numéro de la shard.
- * @returns Un objet EmbedBuilder configuré.
+ * Generates a minimalist and elegant embed.
+ * @param title The title of the embed.
+ * @param description The description of the embed (optional).
+ * @param user The user to display in the footer (optional).
+ * @param color The color of the embed (optional, default: Discord blue).
+ * @returns A ready-to-use EmbedBuilder.
  */
 export function createEmbedTemplate(
   title: string,
-  description: string,
-  interaction?: User,
-  client?: Client
+  description?: string,
+  user?: User,
+  color?: ColorResolvable
 ): EmbedBuilder {
-  const shardId = client?.shard?.ids[0] ?? "N/A";
   const embed = new EmbedBuilder()
     .setTitle(title)
-    .setTimestamp()
-    .setFooter({
-      text: `Requested by ${interaction?.tag} | Shard: ${shardId}`,
-      iconURL: interaction?.displayAvatarURL(),
-    });
+    .setColor(color ?? 0x301934)
+    .setTimestamp();
 
-  if (description && description.length > 0) {
-    embed.setDescription(description);
+  if (description && description.trim().length > 0) {
+    embed.setDescription(description.trim());
+  }
+
+  if (user) {
+    embed.setFooter({
+      text: user.tag,
+      iconURL: user.displayAvatarURL(),
+    });
   }
 
   return embed;

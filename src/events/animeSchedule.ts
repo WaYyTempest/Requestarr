@@ -59,3 +59,10 @@ function createDailyEmbed(animes: Anime[]) {
     .setDescription(truncateDescription(description))
     .setFooter({ text: `Day of week : ${today}` });
 }
+
+module.exports = {
+  name: "animeSchedule",
+  execute: async (client: CustomClient) => {
+    await sendTodayAnimeUpdate(client);
+  }
+};

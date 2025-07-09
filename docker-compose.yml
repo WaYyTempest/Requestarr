@@ -1,0 +1,15 @@
+services:
+  requestarr:
+    image: "git.wayy.fr/drone/requestarr:latest"
+    restart: unless-stopped
+    environment:
+    - SONARR_TOKEN=token
+    - SONARR_URL=http://localhost:8989
+    - RADARR_TOKEN=token
+    - RADARR_URL=http://localhost:7878
+    - TOKEN=token
+    - CLIENTID=clientid
+    - TraceError=false
+    - PUBLIC_ARR=false
+    - OWNER=id
+    - NODE_ENV=production

@@ -24,6 +24,15 @@ module.exports = {
 
         if (!command) return;
 
+        if (client.disabledCommands && client.disabledCommands.has(commandName)) {
+          const { EmbedBuilder } = require('discord.js');
+          const embed = new EmbedBuilder()
+            .setTitle('🚫 Command Disabled')
+            .setDescription(`The command \`${commandName}\` is currently disabled.`)
+            .setColor('Orange');
+          return interaction.reply({ embeds: [embed], ephemeral: true });
+        }
+
         try {
           const isDevelopment = process.env.NODE_ENV === "development";
           const isBotOwner = interaction.user.id === process.env.OWNER;
@@ -35,6 +44,7 @@ module.exports = {
               ephemeral: true,
             });
           }
+          await command.execute(client, interaction);
         } catch (error) {
           if (error instanceof HTTPError && error.status === 503) {
             console.error("Service Unavailable:", error.message);

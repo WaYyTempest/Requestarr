@@ -15,38 +15,34 @@ interface Anime {
   genres: Array<{ name: string }>;
 }
 
-export default {
+module.exports = {
   data: new SlashCommandBuilder()
     .setName("daily")
     .setDescription("📅 Show today's anime releases"),
-  async execute(
-    interaction: ChatInputCommandInteraction & { member: GuildMember },
-    client: CustomClient
-  ) {
+  execute: async (
+    client: CustomClient,
+    interaction: ChatInputCommandInteraction & { member: GuildMember }
+  ) => {
     try {
-      const today = new Date().toLocaleDateString("en-CA", {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-      });
+      const days = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+      const today = days[new Date().getDay()];
       const url = `https://api.jikan.moe/v4/schedules?filter=${today}`;
 
       const response = await axios.get(url);
 
-      if (!Array.isArray(response.data.schedules)) {
-        throw new Error("Expected schedules array");
+      if (!Array.isArray(response.data.data)) {
+        throw new Error("Expected data array");
       }
 
-      const schedules: Anime[] = response.data.schedules;
+      const schedules: Anime[] = response.data.data;
 
       if (schedules.length === 0) {
         return interaction.reply({
           embeds: [
             createEmbedTemplate(
               "⚠️ » No Releases",
-              "No anime is scheduled for today.",
-              interaction.user,
-              client
+              `No anime is scheduled for today (${today.charAt(0).toUpperCase() + today.slice(1)}).`,
+              interaction.user
             ).setColor("Yellow"),
           ],
           ephemeral: true,
@@ -68,10 +64,9 @@ export default {
       return interaction.reply({
         embeds: [
           createEmbedTemplate(
-            "📅 » Today's Anime Releases",
+            `📅 » Anime Releases for ${today.charAt(0).toUpperCase() + today.slice(1)}`,
             animeList,
-            interaction.user,
-            client
+            interaction.user
           ).setColor("Blue"),
         ],
       });
@@ -82,8 +77,7 @@ export default {
           createEmbedTemplate(
             "❌ » Error",
             "Could not fetch today's anime releases. Please try again later.",
-            interaction.user,
-            client
+            interaction.user
           ).setColor("Red"),
         ],
         ephemeral: true,
