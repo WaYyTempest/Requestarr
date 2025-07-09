@@ -3,8 +3,8 @@ import path from "path";
 import { intents } from "./client/intents";
 import { partials } from "./client/partials";
 import { ENV } from "./config/env";
-import { readCommands } from "./Handler/commandhandler";
-import { readEvents } from "./Handler/eventhandler";
+import { readCommands } from "./handler/commandhandler";
+import { readEvents } from "./handler/eventhandler";
 import { Command, CustomClient } from "./requestarr/customclient";
 import { registerCommands } from "./requestarr/deploy";
 import { logError } from "./utils/logger";
@@ -77,11 +77,11 @@ ${error.stack ? error.stack.split("\n")[0] : "No source available"}\
         });
       user.send({ embeds: [embedBotCrashed] })
         .then(() => console.log(`DM sent to ${user.username}`))
-        .catch((err) => console.error(`Error sending DM to ${user.username}:`, err));
+        .catch((err: any) => console.error(`Error sending DM to ${user.username}:`, err));
     } else {
       console.error(`User with ID ${userMP} not found.`);
     }
-  } catch (err) {
+  } catch (err: any) {
     console.error(`Error fetching user with ID ${userMP}:`, err);
   }
 });
@@ -129,11 +129,11 @@ ${reason instanceof Error && reason.stack ? reason.stack.split("\n")[0] : "No so
         });
       user.send({ embeds: [embedBotCrashed] })
         .then(() => console.log(`DM sent to ${user.username}`))
-        .catch((err) => console.error(`Error sending DM to ${user.username}:`, err));
+        .catch((err: any) => console.error(`Error sending DM to ${user.username}:`, err));
     } else {
       console.error(`User with ID ${userMP} not found.`);
     }
-  } catch (err) {
+  } catch (err: any) {
     console.error(`Error fetching user with ID ${userMP}:`, err);
   }
 });
