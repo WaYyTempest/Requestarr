@@ -35,7 +35,8 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "rimraf dist && tsc && node --no-warnings dist/index.js"
+    "build": "rimraf dist && tsc",
+    "start": "rimraf dist && npx tsc && node --no-warnings dist/index.js"
   },
   "author": "",
   "license": "ISC",
