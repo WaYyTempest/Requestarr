@@ -1,6 +1,6 @@
 import { readdirSync, statSync } from "fs";
 import path from "path";
-import { CustomClient } from "../Request/customclient";
+import { CustomClient } from "../Requestarr/customclient";
 
 export function readEvents(client: CustomClient, dir: string) {
   const files = readdirSync(dir);

@@ -1,13 +1,13 @@
 import { Client, Collection, EmbedBuilder } from "discord.js";
 import path from "path";
-import { intents } from "./client/intents.js";
-import { partials } from "./client/partials.js";
-import { ENV } from "./config/env.js";
-import { readCommands } from "./Handler/commandhandler.js";
-import { readEvents } from "./Handler/eventhandler.js";
-import { Command, CustomClient } from "./Request/customclient.js";
-import { logError } from "./utils/logger.js";
-import { registerCommands } from "./Request/deploy.js";
+import { intents } from "./client/intents";
+import { partials } from "./client/partials";
+import { ENV } from "./config/env";
+import { readCommands } from "./Handler/commandhandler";
+import { readEvents } from "./Handler/eventhandler";
+import { Command, CustomClient } from "./Requestarr/customclient";
+import { logError } from "./utils/logger";
+import { registerCommands } from "./Requestarr/deploy";
 
 export const client = new Client({
   intents,

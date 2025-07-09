@@ -1,6 +1,6 @@
 import { SlashCommandBuilder, ChatInputCommandInteraction } from "discord.js";
 import path from "path";
-import { CustomClient } from "../Request/customclient";
+import { CustomClient } from "../Requestarr/customclient";
 import { createEmbedTemplate } from "../modules/embed";
 
 module.exports = {

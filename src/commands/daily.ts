@@ -5,7 +5,7 @@ import {
   SlashCommandBuilder,
 } from "discord.js";
 import { createEmbedTemplate } from "../modules/embed";
-import { CustomClient } from "../Request/customclient";
+import { CustomClient } from "../Requestarr/customclient";
 
 interface Anime {
   title: string;
