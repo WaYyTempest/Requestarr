@@ -17,6 +17,7 @@ export class CustomClient extends Client {
   cooldowns: Collection<string, Collection<string, number>>;
   leaderboardMessageId?: string;
   api: Record<string, any>;
+  disabledCommands: Set<string>;
 
   constructor(options: ClientOptions) {
     super(options);
@@ -24,5 +25,6 @@ export class CustomClient extends Client {
     this.cooldowns = new Collection();
     this.leaderboardMessageId = undefined;
     this.api = {};
+    this.disabledCommands = new Set();
   }
 }

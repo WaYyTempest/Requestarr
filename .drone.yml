@@ -1,0 +1,22 @@
+kind: pipeline
+name: build-and-deploy
+
+trigger:
+  branch:
+    - main
+  event:
+    - push
+
+steps:
+  - name: docker
+    image: plugins/docker
+    settings:
+      registry: git.wayy.fr
+      username:
+        from_secret: gitea_username
+      password:
+        from_secret: gitea_password
+      repo: git.wayy.fr/drone/requestarr
+      tags:
+        - latest
+        - ${DRONE_COMMIT_SHA:0:7}

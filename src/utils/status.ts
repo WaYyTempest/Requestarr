@@ -9,7 +9,7 @@ export async function setStatus(client: CustomClient) {
         name: "🔧 Under Development | Please Check Back Later",
         type: ActivityType.Playing,
       }
-    : { name: `/help`, type: ActivityType.Listening };
+    : { name: `Self Hosted`, type: ActivityType.Streaming };
 
   await client.user?.setPresence({
     status,
