@@ -6,8 +6,8 @@ import { ENV } from "./config/env";
 import { readCommands } from "./Handler/commandhandler";
 import { readEvents } from "./Handler/eventhandler";
 import { Command, CustomClient } from "./Requestarr/customclient";
-import { logError } from "./utils/logger";
 import { registerCommands } from "./Requestarr/deploy";
+import { logError } from "./utils/logger";
 
 export const client = new Client({
   intents,
