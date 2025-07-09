@@ -4,7 +4,7 @@ RUN adduser -D -s /bin/sh requestarr
 
 WORKDIR /srv/docker/requestarr
 
-COPY package.json ./
+COPY package*.json ./
 COPY tsconfig.json ./
 
 USER root
@@ -12,7 +12,8 @@ USER root
 RUN npm install
 
 COPY src ./src
-COPY . .
+
+RUN npm run build:docker
 
 ENV TZ=Europe/Paris
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone

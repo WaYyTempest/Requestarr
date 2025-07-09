@@ -1,6 +1,6 @@
 import { HTTPError } from "@discordjs/rest";
 import { BaseInteraction } from "discord.js";
-import { CustomClient } from "../Requestarr/customclient";
+import { CustomClient } from "../requestarr/customclient";
 
 module.exports = {
   name: "interactionCreate",

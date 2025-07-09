@@ -1,6 +1,6 @@
 import { readdirSync, statSync } from "fs";
 import path from "path";
-import { CustomClient } from "../Requestarr/customclient";
+import { CustomClient } from "../requestarr/customclient";
 
 export function readEvents(client: CustomClient, dir: string) {
   const files = readdirSync(dir);
@@ -11,7 +11,7 @@ export function readEvents(client: CustomClient, dir: string) {
 
     if (stat.isDirectory()) {
       readEvents(client, fullPath);
-    } else if (file.endsWith(".js")) {
+    } else if (file.endsWith(".js") || file.endsWith(".ts")) {
       try {
         const event = require(fullPath);
         if (event.name && typeof event.execute === "function") {
