@@ -3,11 +3,14 @@
     "lib": ["ESNext"],
     "target": "ESNext",
     "module": "commonjs",
+    "moduleResolution": "node",
     "strict": true,
     "alwaysStrict": true,
     "outDir": "dist",
     "esModuleInterop": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true
   },
   "include": ["src"],
   "exclude": ["dist/**/*", "node_modules/**/*"]
