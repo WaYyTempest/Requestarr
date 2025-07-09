@@ -4,8 +4,6 @@ name: build-and-deploy
 trigger:
   branch:
     - main
-  event:
-    - push
 
 steps:
   - name: docker
