@@ -14,11 +14,9 @@ module.exports = {
     const formattedDate = formatDate(new Date());
     const serverCount = client.guilds.cache.size;
     const eventCount = client.eventNames().length;
-
-    if (client.shard && client.shard.ids[0] === 0) {
-      console.clear();
-      const asciiArt = generateASCII("Requestarr");
-      const details = `
+    console.clear();
+    const asciiArt = generateASCII("Requestarr");
+    const details = `
 [${formattedDate}] 🚀 ${client.user?.tag} is up and ready to serve
 
 [${formattedDate}] 📚 ${commandCount} commands successfully loaded
@@ -29,8 +27,7 @@ module.exports = {
 
 [${formattedDate}] ❤️ Developed by WaYy Tempest
 `;
-      console.log(`${asciiArt}\n${details}`);
-    }
+    console.log(`${asciiArt}\n${details}`);
 
     await setStatus(client);
     setInterval(() => setStatus(client), 3600000);
