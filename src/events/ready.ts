@@ -1,6 +1,6 @@
 import cron from "node-cron";
 import { CustomClient } from "../Requestarr/customclient";
-import { sendTodayAnimeUpdate } from "../events/animeSchedule";
+import { sendAnimeScheduleWithButtons } from "../events/animeSchedule";
 import { formatDate } from "../utils/dateFormatter";
 import { generateASCII } from "../utils/generateASCII";
 import { setStatus } from "../utils/status";
@@ -32,7 +32,7 @@ module.exports = {
     await setStatus(client);
     setInterval(() => setStatus(client), 3600000);
     cron.schedule("0 1 * * *", async () => {
-      await sendTodayAnimeUpdate(client);
+      await sendAnimeScheduleWithButtons(client);
     });
   },
 };

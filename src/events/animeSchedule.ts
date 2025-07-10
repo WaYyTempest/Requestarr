@@ -1,5 +1,12 @@
 import axios from "axios";
-import { ColorResolvable, EmbedBuilder } from "discord.js";
+import {
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  ColorResolvable,
+  EmbedBuilder,
+  Interaction,
+} from "discord.js";
 import { CustomClient } from "../Requestarr/customclient";
 import {
   DAYS_OF_WEEK,
@@ -14,38 +21,100 @@ interface Anime {
   synopsis?: string;
 }
 
-export async function getTodayAnime(): Promise<Anime[]> {
-  const today = DAYS_OF_WEEK[getMondayBasedDayIndex()];
-  try {
-    const { data } = await axios.get(
-      `https://api.jikan.moe/v4/schedules?filter=${today}`
-    );
-    return data.data;
-  } catch (error) {
-    console.error(`❌ Error fetching anime schedule: ${error}`);
-    return [];
-  }
-}
+export async function sendAnimeScheduleWithButtons(client: CustomClient) {
+  let dayIndex = getMondayBasedDayIndex();
 
-export async function sendTodayAnimeUpdate(client: CustomClient) {
-  const animes = await getTodayAnime();
-  if (animes.length === 0) return;
-
-  const embed = createDailyEmbed(animes);
-  const ownerId = process.env.OWNER;
-
-  if (ownerId) {
-    const user = await client.users.fetch(ownerId);
-    if (user) {
-      await user.send({ embeds: [embed] });
+  const fetchAnimeForDay = async (index: number): Promise<Anime[]> => {
+    const day = DAYS_OF_WEEK[index];
+    try {
+      const { data } = await axios.get(
+        `https://api.jikan.moe/v4/schedules?filter=${day}&kids=false&unapproved`
+      );
+      return data.data;
+    } catch (error) {
+      console.error(`❌ Error fetching anime schedule: ${error}`);
+      return [];
     }
-  }
+  };
+
+  const sendSchedule = async (index: number, interaction?: Interaction) => {
+    const animes = await fetchAnimeForDay(index);
+    const embed = createAnimeScheduleEmbed(animes, index);
+
+    const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder()
+        .setCustomId("prev_day")
+        .setLabel("⏮️ Previous")
+        .setStyle(ButtonStyle.Primary),
+      new ButtonBuilder()
+        .setCustomId("next_day")
+        .setLabel("⏭️ Next")
+        .setStyle(ButtonStyle.Primary)
+    );
+
+    if (interaction && interaction.isButton()) {
+      await interaction.update({ embeds: [embed], components: [row] });
+    } else {
+      const ownerId = process.env.OWNER;
+      if (!ownerId) return;
+
+      const user = await client.users.fetch(ownerId);
+      if (!user) return;
+
+      const message = await user.send({ embeds: [embed], components: [row] });
+
+      const collector = message.createMessageComponentCollector({
+        time: 1000 * 60 * 5,
+      });
+
+      collector.on("collect", async (i) => {
+        if (i.user.id !== ownerId) {
+          await i.reply({
+            content: "You are not authorized to interact with this.",
+            ephemeral: true,
+          });
+          return;
+        }
+
+        if (i.customId === "prev_day") {
+          dayIndex = (dayIndex + 6) % 7;
+        } else if (i.customId === "next_day") {
+          dayIndex = (dayIndex + 1) % 7;
+        }
+
+        await sendSchedule(dayIndex, i);
+      });
+
+      collector.on("end", async () => {
+        try {
+          const disabledRow =
+            new ActionRowBuilder<ButtonBuilder>().addComponents(
+              new ButtonBuilder()
+                .setCustomId("prev_day")
+                .setLabel("⏮️ Previous")
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(true),
+              new ButtonBuilder()
+                .setCustomId("next_day")
+                .setLabel("⏭️ Next")
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(true)
+            );
+          await message.edit({ components: [disabledRow] });
+        } catch (e) {}
+      });
+    }
+  };
+
+  await sendSchedule(dayIndex);
 }
 
-function createDailyEmbed(animes: Anime[]) {
-  const todayIndex = getMondayBasedDayIndex();
-  const today = DAYS_OF_WEEK[todayIndex];
-  const color: ColorResolvable = DAY_COLORS[today];
+function createAnimeScheduleEmbed(
+  animes: Anime[],
+  dayIndex: number
+): EmbedBuilder {
+  const day = DAYS_OF_WEEK[dayIndex];
+  const color: ColorResolvable = DAY_COLORS[day];
   const description = animes
     .map(
       (anime) =>
@@ -54,15 +123,12 @@ function createDailyEmbed(animes: Anime[]) {
     .join("\n");
 
   return new EmbedBuilder()
-    .setTitle("Today's Anime Releases")
+    .setTitle(`Anime Releases – ${capitalize(day)}`)
     .setColor(color)
     .setDescription(truncateDescription(description))
-    .setFooter({ text: `Day of week : ${today}` });
+    .setFooter({ text: `Day of week: ${day}` });
 }
 
-module.exports = {
-  name: "animeSchedule",
-  execute: async (client: CustomClient) => {
-    await sendTodayAnimeUpdate(client);
-  }
-};
+function capitalize(word: string): string {
+  return word.charAt(0).toUpperCase() + word.slice(1);
+}
