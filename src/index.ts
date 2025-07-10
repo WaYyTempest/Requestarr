@@ -7,7 +7,7 @@ import { readCommands } from "./handler/commandhandler";
 import { readEvents } from "./handler/eventhandler";
 import { Command, CustomClient } from "./Requestarr/customclient";
 import { registerCommands } from "./Requestarr/deploy";
-import { logError } from "./utils/logger";
+import { logError, logInfo } from "./utils/logger";
 
 export const client = new Client({
   intents,
@@ -76,13 +76,13 @@ ${error.stack ? error.stack.split("\n")[0] : "No source available"}\
           iconURL: client.user?.avatarURL() || undefined,
         });
       user.send({ embeds: [embedBotCrashed] })
-        .then(() => console.log(`DM sent to ${user.username}`))
-        .catch((err: any) => console.error(`Error sending DM to ${user.username}:`, err));
+        .then(() => logInfo("DM", `DM sent to ${user.username}`))
+        .catch((err: any) => logError(`Error sending DM to ${user.username}`, err));
     } else {
-      console.error(`User with ID ${userMP} not found.`);
+      logError("User Fetch", `User with ID ${userMP} not found.`);
     }
   } catch (err: any) {
-    console.error(`Error fetching user with ID ${userMP}:`, err);
+    logError("User Fetch", `Error fetching user with ID ${userMP}`, err);
   }
 });
 
@@ -128,12 +128,12 @@ ${reason instanceof Error && reason.stack ? reason.stack.split("\n")[0] : "No so
           iconURL: client.user?.avatarURL() || undefined,
         });
       user.send({ embeds: [embedBotCrashed] })
-        .then(() => console.log(`DM sent to ${user.username}`))
-        .catch((err: any) => console.error(`Error sending DM to ${user.username}:`, err));
+        .then(() => logInfo("DM", `DM sent to ${user.username}`))
+        .catch((err: any) => logError(`Error sending DM to ${user.username}`, err));
     } else {
-      console.error(`User with ID ${userMP} not found.`);
+      logError("User Fetch", `User with ID ${userMP} not found.`);
     }
   } catch (err: any) {
-    console.error(`Error fetching user with ID ${userMP}:`, err);
+    logError("User Fetch", `Error fetching user with ID ${userMP}`, err);
   }
 });
