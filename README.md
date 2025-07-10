@@ -17,7 +17,7 @@ A modern Discord bot for managing TV series (Sonarr) and movies (Radarr) with ad
 ```yml
 services:
   requestarr:
-    image: "git.wayy.fr/drone/requestarr:latest"
+    image: wayytempest/requestarr
     restart: unless-stopped
     environment:
       - SONARR_TOKEN=token

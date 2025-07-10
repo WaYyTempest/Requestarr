@@ -1,6 +1,6 @@
 services:
   requestarr:
-    image: "git.wayy.fr/drone/requestarr:latest"
+    image: wayytempest/requestarr
     restart: unless-stopped
     environment:
     - SONARR_TOKEN=token
