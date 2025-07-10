@@ -9,12 +9,12 @@ steps:
   - name: docker
     image: plugins/docker
     settings:
-      registry: git.wayy.fr
+      repo: wayytempest/requestarr
+      dockerfile: Dockerfile
       username:
-        from_secret: gitea_username
+        from_secret: docker_username
       password:
-        from_secret: gitea_password
-      repo: git.wayy.fr/drone/requestarr
+        from_secret: docker_password
       tags:
         - latest
         - ${DRONE_COMMIT_SHA:0:7}
