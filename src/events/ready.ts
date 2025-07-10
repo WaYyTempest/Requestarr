@@ -1,9 +1,11 @@
+import dotenv from "dotenv";
 import cron from "node-cron";
 import { CustomClient } from "../Requestarr/customclient";
 import { sendAnimeScheduleWithButtons } from "../events/animeSchedule";
 import { formatDate } from "../utils/dateFormatter";
 import { generateASCII } from "../utils/generateASCII";
 import { setStatus } from "../utils/status";
+dotenv.config();
 
 module.exports = {
   name: "ready",
@@ -32,7 +34,9 @@ module.exports = {
     await setStatus(client);
     setInterval(() => setStatus(client), 3600000);
     cron.schedule("0 1 * * *", async () => {
-      await sendAnimeScheduleWithButtons(client);
+      if (process.env.NOTIF_ANIME !== "false") {
+        await sendAnimeScheduleWithButtons(client);
+      }
     });
   },
 };
