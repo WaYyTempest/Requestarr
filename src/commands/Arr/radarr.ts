@@ -110,6 +110,21 @@ module.exports = {
           return interaction.reply({ embeds: [embed], ephemeral: true });
         }
 
+        // Get a valid quality profile ID from Radarr
+        const qualityProfilesUrl = `${RADARR_URL}/qualityProfile`;
+        const { data: qualityProfiles } = await axios.get(qualityProfilesUrl, {
+          headers: { "X-Api-Key": RADARR_TOKEN },
+        });
+        const qualityProfileId = qualityProfiles[0]?.id;
+        if (!qualityProfileId) {
+          const embed = createEmbedTemplate(
+            "``❌`` » Error",
+            "No quality profile found in Radarr. Please configure one in Radarr first.",
+            interaction.user
+          ).setColor("Red");
+          return interaction.reply({ embeds: [embed], ephemeral: true });
+        }
+
         if (data.length === 1) {
           const movie = data[0];
           // Check if the movie already exists in the library
@@ -156,7 +171,7 @@ module.exports = {
           const addUrl = `${RADARR_URL}/movie`;
           const addPayload = {
             title: movie.title,
-            qualityProfileId: 1,
+            qualityProfileId: qualityProfileId,
             titleSlug: movie.titleSlug,
             images: movie.images,
             tmdbId: movie.tmdbId,
@@ -165,15 +180,29 @@ module.exports = {
             monitored: true,
             addOptions: { searchForMovie: true },
           };
-          await axios.post(addUrl, addPayload, {
-            headers: { "X-Api-Key": RADARR_TOKEN },
-          });
-          const embed = createEmbedTemplate(
-            "``✅`` » Movie Added",
-            `Successfully added **${movie.title}** to Radarr!`,
-            interaction.user
-          ).setColor("Green");
-          return interaction.reply({ embeds: [embed] });
+          try {
+            await axios.post(addUrl, addPayload, {
+              headers: { "X-Api-Key": RADARR_TOKEN },
+            });
+            const embed = createEmbedTemplate(
+              "``✅`` » Movie Added",
+              `Successfully added **${movie.title}** to Radarr!`,
+              interaction.user
+            ).setColor("Green");
+            return interaction.reply({ embeds: [embed] });
+          } catch (error: any) {
+            // Log the detailed error from Radarr
+            console.error(
+              "Error adding movie to Radarr:",
+              error?.response?.data || error
+            );
+            const embed = createEmbedTemplate(
+              "``❌`` » Error",
+              `Failed to add **${movie.title}** to Radarr. Please try again later.`,
+              interaction.user
+            ).setColor("Red");
+            return interaction.reply({ embeds: [embed], ephemeral: true });
+          }
         }
 
         // Multiple results: show paginated embed with navigation buttons
@@ -277,7 +306,7 @@ module.exports = {
             const addUrl = `${RADARR_URL}/movie`;
             const addPayload = {
               title: movie.title,
-              qualityProfileId: 1,
+              qualityProfileId: qualityProfileId,
               titleSlug: String(movie.titleSlug),
               images: movie.images,
               tmdbId: movie.tmdbId,
@@ -301,7 +330,12 @@ module.exports = {
                 "RADARR",
                 `${interaction.user.id} -> ${movie.title} -> add`
               );
-            } catch (error) {
+            } catch (error: any) {
+              // Log the detailed error from Radarr
+              console.error(
+                "Error adding movie to Radarr:",
+                error?.response?.data || error
+              );
               const embed = createEmbedTemplate(
                 "``❌`` » Error",
                 `Failed to add **${movie.title}** to Radarr. Please try again later.`,
@@ -323,9 +357,12 @@ module.exports = {
           } catch {}
         });
         return;
-      } catch (error) {
+      } catch (error: any) {
         // Log and reply on error
-        console.error("Error adding movie to Radarr:", error);
+        console.error(
+          "Error adding movie to Radarr:",
+          error?.response?.data || error
+        );
         const embed = createEmbedTemplate(
           "``❌`` » Error",
           "Failed to add movie to Radarr. Please try again later.",
@@ -375,7 +412,7 @@ module.exports = {
           interaction.user
         ).setColor("Green");
         return interaction.reply({ embeds: [embed] });
-      } catch (error) {
+      } catch (error: any) {
         // Reply on error
         console.error("Error removing movie from Radarr:", error);
         const embed = createEmbedTemplate(
@@ -472,7 +509,7 @@ module.exports = {
             } catch {}
           });
         }
-      } catch (error) {
+      } catch (error: any) {
         // Reply on error
         console.error("Error fetching Radarr calendar:", error);
         const embed = new EmbedBuilder()
