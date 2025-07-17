@@ -13,3 +13,22 @@ services:
     - PUBLIC_ARR=false
     - OWNER=id
     - NODE_ENV=production
+    - NOTIF_ANIME=false
+    - REDIS_URL=redis:6379
+    depends_on:
+      redis:
+        condition: service_healthy
+  redis:
+    networks:
+      - requestarr
+    image: redis:8.2-rc1-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+networks:
+  requestarr:
+    external: true
