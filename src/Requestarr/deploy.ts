@@ -8,6 +8,7 @@ config();
 const commandDir = path.join(__dirname, "../commands");
 const globalCommands: Array<any> = [];
 
+// Recursively load all command files from the commands directory
 async function loadCommands(dir: string) {
   const files = await fs.readdir(dir);
   for (const file of files) {
@@ -22,6 +23,7 @@ async function loadCommands(dir: string) {
   }
 }
 
+// Process a command file and add it to the global commands list if valid
 async function processCommandFile(filePath: string, fileName: string) {
   try {
     const command = require(filePath);
@@ -36,6 +38,7 @@ async function processCommandFile(filePath: string, fileName: string) {
   }
 }
 
+// Add a command to the global commands array if not already present
 function assignCommandToGlobal(commandJSON: any) {
   const { name } = commandJSON;
   if (!globalCommands.some((cmd) => cmd.name === name)) {
@@ -43,6 +46,7 @@ function assignCommandToGlobal(commandJSON: any) {
   }
 }
 
+// Register all loaded commands with the Discord API
 export async function registerCommands() {
   const clientId = process.env.CLIENTID;
   const token = process.env.TOKEN;
@@ -62,12 +66,14 @@ export async function registerCommands() {
   }
 }
 
+// Log messages only in non-production environments
 function log(message: string) {
   if (process.env.NODE_ENV !== "production") {
     console.log(message);
   }
 }
 
+// Register global commands with Discord
 async function registerGlobalCommands(rest: REST, clientId: string) {
   log(`🔄 Registering ${globalCommands.length} global commands...`);
   await rest.put(Routes.applicationCommands(clientId), {
@@ -76,4 +82,5 @@ async function registerGlobalCommands(rest: REST, clientId: string) {
   log(`✅ Registered ${globalCommands.length} global commands.`);
 }
 
+// Start the registration process and handle fatal errors
 registerCommands().catch((err) => console.error("❌ Fatal error:", err));

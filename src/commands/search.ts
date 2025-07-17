@@ -37,10 +37,12 @@ module.exports = {
     client: CustomClient,
     interaction: ChatInputCommandInteraction & { member: GuildMember }
   ) => {
+    // Get the subcommand (anime or manga) and the search query
     const subCommand = interaction.options.getSubcommand();
     const query = interaction.options.getString("query");
 
     if (!query) {
+      // Reply if no query provided
       const embed = createEmbedTemplate(
         "⚠️ » Error",
         "Please provide a query.",
@@ -52,16 +54,19 @@ module.exports = {
       });
     }
 
+    // Build the Jikan API endpoint based on the subcommand
     const endpoint = subCommand === "anime" ? "anime" : "manga";
     const url = `https://api.jikan.moe/v4/${endpoint}?q=${encodeURIComponent(
       query
     )}&limit=1`;
 
     try {
+      // Fetch the first result from the Jikan API
       const { data } = await axios.get(url);
       const item = data.data[0];
 
       if (!item) {
+        // No results found
         const embed = createEmbedTemplate(
           "⚠️ » No Results",
           `No results found for "${query}".`,
@@ -73,6 +78,7 @@ module.exports = {
         });
       }
 
+      // Format and send the result as an embed
       const embed = createEmbedTemplate(
         item.title,
         `${
@@ -97,6 +103,7 @@ module.exports = {
 
       return interaction.reply({ embeds: [embed] });
     } catch (error) {
+      // Handle errors from the API request
       console.error("Error fetching data:", error);
       const embed = createEmbedTemplate(
         "❌ » Error",

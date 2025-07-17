@@ -6,6 +6,7 @@ module.exports = {
   name: "interactionCreate",
   execute: async function (client: CustomClient, interaction: BaseInteraction) {
     try {
+      // Only handle command, button, or modal interactions
       if (
         !(
           interaction.isCommand() ||
@@ -24,6 +25,7 @@ module.exports = {
 
         if (!command) return;
 
+        // Block execution if the command is disabled
         if (client.disabledCommands && client.disabledCommands.has(commandName)) {
           const { EmbedBuilder } = require('discord.js');
           const embed = new EmbedBuilder()
@@ -34,6 +36,7 @@ module.exports = {
         }
 
         try {
+          // Only the bot owner can execute commands in development mode
           const isDevelopment = process.env.NODE_ENV === "development";
           const isBotOwner = interaction.user.id === process.env.OWNER;
 
@@ -44,8 +47,10 @@ module.exports = {
               ephemeral: true,
             });
           }
+          // Execute the command
           await command.execute(client, interaction);
         } catch (error) {
+          // Handle specific Discord API and interaction errors
           if (error instanceof HTTPError && error.status === 503) {
             console.error("Service Unavailable:", error.message);
             await interaction.reply({
@@ -74,6 +79,7 @@ module.exports = {
         }
       }
     } catch (error) {
+      // Catch-all for unexpected errors in the interaction handler
       console.error(
         "An error occurred while processing the interaction:",
         error

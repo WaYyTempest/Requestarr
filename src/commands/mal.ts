@@ -61,6 +61,7 @@ interface UserResponse {
 
 const ITEMS_PER_PAGE = 5;
 
+// Helper to create an embed for paginated anime lists
 const createEmbed = (
   animes: Anime[],
   page: number,
@@ -85,6 +86,7 @@ const createEmbed = (
   ).setColor("DarkPurple");
 };
 
+// Helper to create navigation buttons for pagination
 const createButtons = (page: number, totalPages: number) => {
   return new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()
@@ -147,6 +149,7 @@ module.exports = {
 
     try {
       if (subcommand === "search") {
+        // Handle user stats and favorites search
         const username = interaction.options.getString("username");
         if (!username) {
           return interaction.reply({
@@ -155,6 +158,7 @@ module.exports = {
           });
         }
 
+        // Fetch user profile
         const { data: userData } = await axios.get<UserResponse>(
           `https://api.jikan.moe/v4/users/${username}`
         );
@@ -166,6 +170,7 @@ module.exports = {
           });
         }
 
+        // Fetch user statistics
         const { data: statsData } = await axios.get<StatisticsResponse>(
           `https://api.jikan.moe/v4/users/${username}/statistics`
         );
@@ -177,6 +182,7 @@ module.exports = {
           });
         }
 
+        // Fetch user favorite anime
         const { data: favoritesData } = await axios.get<FavoritesResponse>(
           `https://api.jikan.moe/v4/users/${username}/favorites`
         );
@@ -197,6 +203,7 @@ module.exports = {
           )
           .join("\n");
 
+        // Build and send the user stats embed
         const embed = new EmbedBuilder()
           .setTitle(`${username} — MyAnimeList Statistics`)
           .setURL(`https://myanimelist.net/profile/${username}`)
@@ -232,6 +239,7 @@ module.exports = {
       }
 
       if (subcommand === "seasonal_anime") {
+        // Handle seasonal anime search
         const season = interaction.options.getString("season");
         const year = interaction.options.getInteger("year");
 
@@ -245,6 +253,7 @@ module.exports = {
         }
 
         try {
+          // Fetch seasonal anime list
           const { data } = await axios.get<AnimeScheduleResponse>(
             `https://api.jikan.moe/v4/seasons/${year}/${season}`
           );

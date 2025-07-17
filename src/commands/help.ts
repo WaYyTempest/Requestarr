@@ -9,6 +9,7 @@ module.exports = {
     .setName("help")
     .setDescription("📖 Show all available commands and usage examples"),
   execute: async (client: CustomClient, interaction: ChatInputCommandInteraction) => {
+    // Read all command files except 'help.js'
     const commandsPath = path.join(__dirname);
     const files = fs.readdirSync(commandsPath).filter((file) => file.endsWith(".js") && file !== "help.js");
     let description = "";
@@ -26,6 +27,7 @@ module.exports = {
       "daily": "📅",
       "module": "🛠️",
     };
+    // Build the help description for each command
     for (const file of files) {
       const cmd = require(path.join(commandsPath, file));
       const name = cmd.data?.name || file.replace(/\.js$/, "");
@@ -36,6 +38,7 @@ module.exports = {
         description += `\n> Example: ${usageExamples[name]}`;
       }
     }
+    // Create and send the help embed
     const embed = createEmbedTemplate(
       "📖 Help & Commands",
       description || "No commands found.",

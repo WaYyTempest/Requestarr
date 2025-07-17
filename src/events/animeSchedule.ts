@@ -24,6 +24,7 @@ interface Anime {
 export async function sendAnimeScheduleWithButtons(client: CustomClient) {
   let dayIndex = getMondayBasedDayIndex();
 
+  // Fetch anime schedule for a given day index
   const fetchAnimeForDay = async (index: number): Promise<Anime[]> => {
     const day = DAYS_OF_WEEK[index];
     try {
@@ -37,6 +38,7 @@ export async function sendAnimeScheduleWithButtons(client: CustomClient) {
     }
   };
 
+  // Send the schedule embed and handle button navigation
   const sendSchedule = async (index: number, interaction?: Interaction) => {
     const animes = await fetchAnimeForDay(index);
     const embed = createAnimeScheduleEmbed(animes, index);
@@ -53,6 +55,7 @@ export async function sendAnimeScheduleWithButtons(client: CustomClient) {
     );
 
     if (interaction && interaction.isButton()) {
+      // Update the message if triggered by a button interaction
       await interaction.update({ embeds: [embed], components: [row] });
     } else {
       const ownerId = process.env.OWNER;
@@ -61,8 +64,10 @@ export async function sendAnimeScheduleWithButtons(client: CustomClient) {
       const user = await client.users.fetch(ownerId);
       if (!user) return;
 
+      // Send the initial schedule to the owner via DM
       const message = await user.send({ embeds: [embed], components: [row] });
 
+      // Collector to handle button navigation
       const collector = message.createMessageComponentCollector({
         time: 1000 * 60 * 5,
       });
@@ -82,11 +87,13 @@ export async function sendAnimeScheduleWithButtons(client: CustomClient) {
           dayIndex = (dayIndex + 1) % 7;
         }
 
+        // Update the schedule for the new day
         await sendSchedule(dayIndex, i);
       });
 
       collector.on("end", async () => {
         try {
+          // Remove buttons when collector ends
           await message.edit({ components: [] });
         } catch (e) {}
       });
@@ -96,6 +103,7 @@ export async function sendAnimeScheduleWithButtons(client: CustomClient) {
   await sendSchedule(dayIndex);
 }
 
+// Create the embed for the anime schedule of a given day
 function createAnimeScheduleEmbed(
   animes: Anime[],
   dayIndex: number
