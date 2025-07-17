@@ -1,18 +1,18 @@
 import axios from "axios";
 import {
-  ChatInputCommandInteraction,
-  GuildMember,
-  SlashCommandBuilder,
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
-  EmbedBuilder,
+  ChatInputCommandInteraction,
   ComponentType,
+  EmbedBuilder,
+  GuildMember,
+  SlashCommandBuilder,
 } from "discord.js";
 import dotenv from "dotenv";
-import { createEmbedTemplate } from "../modules/embed";
-import { CustomClient } from "../Requestarr/customclient";
-import { logInfo, logError } from "../utils/logger";
+import { createEmbedTemplate } from "../../modules/embed";
+import { CustomClient } from "../../Requestarr/customclient";
+import { logInfo } from "../../utils/logger";
 
 dotenv.config();
 
@@ -23,38 +23,45 @@ module.exports = {
   data: new SlashCommandBuilder()
     .setName("sonarr")
     .setDescription("Manage series in Sonarr")
-    .addSubcommand(sub =>
+    .addSubcommand((sub) =>
       sub
         .setName("add")
         .setDescription("➕ Add a series to Sonarr (supports TMDb ID)")
-        .addStringOption(option =>
-          option.setName("query").setDescription("Series name or TMDb ID").setRequired(true)
+        .addStringOption((option) =>
+          option
+            .setName("query")
+            .setDescription("Series name or TMDb ID")
+            .setRequired(true)
         )
     )
-    .addSubcommand(sub =>
+    .addSubcommand((sub) =>
       sub
         .setName("remove")
         .setDescription("❌ Remove a series from Sonarr (supports TMDb ID)")
-        .addStringOption(option =>
-          option.setName("query").setDescription("Series name or TMDb ID").setRequired(true)
+        .addStringOption((option) =>
+          option
+            .setName("query")
+            .setDescription("Series name or TMDb ID")
+            .setRequired(true)
         )
     )
-    .addSubcommand(sub =>
-      sub
-        .setName("calendar")
-        .setDescription("📅 Show upcoming Sonarr episodes")
+    .addSubcommand((sub) =>
+      sub.setName("calendar").setDescription("📅 Show upcoming Sonarr episodes")
     ),
   execute: async (
     client: CustomClient,
     interaction: ChatInputCommandInteraction & { member: GuildMember }
   ) => {
     // Restrict command to owner if PUBLIC_ARR is not enabled
-    if (process.env.PUBLIC_ARR !== 'true' && interaction.user.id !== process.env.OWNER) {
+    if (
+      process.env.PUBLIC_ARR !== "true" &&
+      interaction.user.id !== process.env.OWNER
+    ) {
       const embed = createEmbedTemplate(
-        'Command Disabled',
-        'This command is currently disabled for the public. To allow access, set PUBLIC_ARR=true in the environment.',
+        "Command Disabled",
+        "This command is currently disabled for the public. To allow access, set PUBLIC_ARR=true in the environment.",
         interaction.user
-      ).setColor('Orange');
+      ).setColor("Orange");
       return interaction.reply({ embeds: [embed], ephemeral: true });
     }
     const sub = interaction.options.getSubcommand();
@@ -77,7 +84,9 @@ module.exports = {
           searchTerm = `tmdb:${query}`;
         }
         // Search for the series in Sonarr
-        const searchUrl = `${SONARR_URL}/series/lookup?term=${encodeURIComponent(searchTerm)}`;
+        const searchUrl = `${SONARR_URL}/series/lookup?term=${encodeURIComponent(
+          searchTerm
+        )}`;
         const { data } = await axios.get(searchUrl, {
           headers: { "X-Api-Key": SONARR_TOKEN },
         });
@@ -114,20 +123,36 @@ module.exports = {
           const { data: allSeries } = await axios.get(seriesUrl, {
             headers: { "X-Api-Key": SONARR_TOKEN },
           });
-          const alreadyExists = allSeries.some((s: any) => s.tvdbId === serie.tvdbId || s.titleSlug === serie.titleSlug || (s.tmdbId && serie.tmdbId && s.tmdbId === serie.tmdbId));
+          const alreadyExists = allSeries.some(
+            (s: any) =>
+              s.tvdbId === serie.tvdbId ||
+              s.titleSlug === serie.titleSlug ||
+              (s.tmdbId && serie.tmdbId && s.tmdbId === serie.tmdbId)
+          );
           if (alreadyExists) {
             // If the series exists but is not monitored, enable monitoring
-            const existingSerie = allSeries.find((s: any) => s.tvdbId === serie.tvdbId || s.titleSlug === serie.titleSlug || (s.tmdbId && serie.tmdbId && s.tmdbId === serie.tmdbId));
+            const existingSerie = allSeries.find(
+              (s: any) =>
+                s.tvdbId === serie.tvdbId ||
+                s.titleSlug === serie.titleSlug ||
+                (s.tmdbId && serie.tmdbId && s.tmdbId === serie.tmdbId)
+            );
             if (existingSerie && !existingSerie.monitored) {
               const updateUrl = `${SONARR_URL}/series/${existingSerie.id}`;
               // Monitor all seasons except specials (seasonNumber === 0)
-              const seasons = (existingSerie.seasons || []).map((season: any) => ({
-                ...season,
-                monitored: season.seasonNumber !== 0
-              }));
-              await axios.put(updateUrl, { ...existingSerie, monitored: true, seasons }, {
-                headers: { "X-Api-Key": SONARR_TOKEN },
-              });
+              const seasons = (existingSerie.seasons || []).map(
+                (season: any) => ({
+                  ...season,
+                  monitored: season.seasonNumber !== 0,
+                })
+              );
+              await axios.put(
+                updateUrl,
+                { ...existingSerie, monitored: true, seasons },
+                {
+                  headers: { "X-Api-Key": SONARR_TOKEN },
+                }
+              );
               const embed = createEmbedTemplate(
                 "✅ » Monitoring Enabled",
                 `The series **${serie.title}** is already in the Sonarr library and is now set to monitored!`,
@@ -175,43 +200,48 @@ module.exports = {
         // Helper to build the embed for a given page
         const getEmbed = (page: number) => {
           const serie = data[page];
-          const poster = serie.images?.find((img: any) => img.coverType === "poster")?.remoteUrl;
+          const poster = serie.images?.find(
+            (img: any) => img.coverType === "poster"
+          )?.remoteUrl;
           return new EmbedBuilder()
             .setTitle(serie.title)
-            .setDescription(`**Year:** ${serie.year}\n**TVDB ID:** ${serie.tvdbId}`)
+            .setDescription(
+              `**Year:** ${serie.year}\n**TVDB ID:** ${serie.tvdbId}`
+            )
             .setImage(poster || null)
             .setFooter({ text: `Result ${page + 1}/${totalPages}` })
             .setColor("Blue");
         };
         // Helper to build the navigation row for a given page
-        const getRow = (page: number) => new ActionRowBuilder<ButtonBuilder>().addComponents(
-          new ButtonBuilder()
-            .setCustomId("grab")
-            .setLabel("Grab")
-            .setStyle(ButtonStyle.Success),
-          new ButtonBuilder()
-            .setCustomId("prev")
-            .setLabel("Previous")
-            .setStyle(ButtonStyle.Primary)
-            .setDisabled(page === 0),
-          new ButtonBuilder()
-            .setCustomId("next")
-            .setLabel("Next")
-            .setStyle(ButtonStyle.Primary)
-            .setDisabled(page >= totalPages - 1)
-        );
+        const getRow = (page: number) =>
+          new ActionRowBuilder<ButtonBuilder>().addComponents(
+            new ButtonBuilder()
+              .setCustomId("grab")
+              .setLabel("Grab")
+              .setStyle(ButtonStyle.Success),
+            new ButtonBuilder()
+              .setCustomId("prev")
+              .setLabel("Previous")
+              .setStyle(ButtonStyle.Primary)
+              .setDisabled(page === 0),
+            new ButtonBuilder()
+              .setCustomId("next")
+              .setLabel("Next")
+              .setStyle(ButtonStyle.Primary)
+              .setDisabled(page >= totalPages - 1)
+          );
         await interaction.reply({
           embeds: [getEmbed(page)],
-          components: [getRow(page)]
+          components: [getRow(page)],
         });
         // Collector for button navigation
         const collector = interaction.channel?.createMessageComponentCollector({
-          filter: i => i.user.id === interaction.user.id,
+          filter: (i) => i.user.id === interaction.user.id,
           componentType: ComponentType.Button,
           time: 60000,
         });
         if (!collector) return;
-        collector.on("collect", async i => {
+        collector.on("collect", async (i) => {
           if (i.customId === "prev" && page > 0) page--;
           if (i.customId === "next" && page < totalPages - 1) page++;
           if (i.customId === "grab") {
@@ -232,7 +262,10 @@ module.exports = {
               await axios.post(addUrl, addPayload, {
                 headers: { "X-Api-Key": SONARR_TOKEN },
               });
-              logInfo("SONARR", `${interaction.user.id} -> ${serie.title} -> add`);
+              logInfo(
+                "SONARR",
+                `${interaction.user.id} -> ${serie.title} -> add`
+              );
               const embed = createEmbedTemplate(
                 "✅ » Series Added",
                 `Successfully added **${serie.title}** to Sonarr!`,
@@ -253,7 +286,7 @@ module.exports = {
           }
           await i.update({
             embeds: [getEmbed(page)],
-            components: [getRow(page)]
+            components: [getRow(page)],
           });
         });
         collector.on("end", async () => {
@@ -291,7 +324,9 @@ module.exports = {
         const { data: allSeries } = await axios.get(seriesUrl, {
           headers: { "X-Api-Key": SONARR_TOKEN },
         });
-        const found = allSeries.find((s: any) => s.title.toLowerCase() === query.toLowerCase());
+        const found = allSeries.find(
+          (s: any) => s.title.toLowerCase() === query.toLowerCase()
+        );
         if (!found) {
           // Reply if not found
           const embed = createEmbedTemplate(
@@ -343,7 +378,7 @@ module.exports = {
             .setTitle("📅 Sonarr Calendar")
             .setDescription("No upcoming episodes found.")
             .setColor("Blue");
-          return interaction.reply({ embeds: [embed]});
+          return interaction.reply({ embeds: [embed] });
         }
         // Paginate episodes, 5 per page
         const pageSize = 5;
@@ -351,40 +386,48 @@ module.exports = {
         const totalPages = Math.ceil(episodes.length / pageSize);
         const getEmbed = (page: number) => {
           const slice = episodes.slice(page * pageSize, (page + 1) * pageSize);
-          const desc = slice.map((ep: any) => {
-            const seriesTitle = ep.series?.title || ep.title || "?";
-            return `**${seriesTitle}**\nS${ep.seasonNumber}E${ep.episodeNumber} — ${ep.title}\n📅 Airs: ${ep.airDateUtc ? new Date(ep.airDateUtc).toLocaleString() : "?"}`;
-          }).join("\n\n");
+          const desc = slice
+            .map((ep: any) => {
+              const seriesTitle = ep.series?.title || ep.title || "?";
+              return `**${seriesTitle}**\nS${ep.seasonNumber}E${
+                ep.episodeNumber
+              } — ${ep.title}\n📅 Airs: ${
+                ep.airDateUtc ? new Date(ep.airDateUtc).toLocaleString() : "?"
+              }`;
+            })
+            .join("\n\n");
           return new EmbedBuilder()
             .setTitle(`📅 Sonarr Calendar — Page ${page + 1}/${totalPages}`)
             .setDescription(desc)
             .setColor("Blue");
         };
-        const getRow = (page: number) => new ActionRowBuilder<ButtonBuilder>().addComponents(
-          new ButtonBuilder()
-            .setCustomId("prev")
-            .setLabel("Previous")
-            .setStyle(ButtonStyle.Primary)
-            .setDisabled(page === 0),
-          new ButtonBuilder()
-            .setCustomId("next")
-            .setLabel("Next")
-            .setStyle(ButtonStyle.Primary)
-            .setDisabled(page >= totalPages - 1)
-        );
+        const getRow = (page: number) =>
+          new ActionRowBuilder<ButtonBuilder>().addComponents(
+            new ButtonBuilder()
+              .setCustomId("prev")
+              .setLabel("Previous")
+              .setStyle(ButtonStyle.Primary)
+              .setDisabled(page === 0),
+            new ButtonBuilder()
+              .setCustomId("next")
+              .setLabel("Next")
+              .setStyle(ButtonStyle.Primary)
+              .setDisabled(page >= totalPages - 1)
+          );
         await interaction.reply({
           embeds: [getEmbed(page)],
-          components: totalPages > 1 ? [getRow(page)] : []
+          components: totalPages > 1 ? [getRow(page)] : [],
         });
         if (totalPages > 1) {
           // Create a collector for calendar navigation
-          const collector = interaction.channel?.createMessageComponentCollector({
-            filter: i => i.user.id === interaction.user.id,
-            componentType: ComponentType.Button,
-            time: 60000,
-          });
+          const collector =
+            interaction.channel?.createMessageComponentCollector({
+              filter: (i) => i.user.id === interaction.user.id,
+              componentType: ComponentType.Button,
+              time: 60000,
+            });
           if (!collector) return;
-          collector.on("collect", async i => {
+          collector.on("collect", async (i) => {
             if (i.customId === "prev" && page > 0) page--;
             if (i.customId === "next" && page < totalPages - 1) page++;
             await i.update({
@@ -403,7 +446,9 @@ module.exports = {
         console.error("Error fetching Sonarr calendar:", error);
         const embed = new EmbedBuilder()
           .setTitle("❌ » Error")
-          .setDescription("Failed to fetch Sonarr calendar. Please try again later.")
+          .setDescription(
+            "Failed to fetch Sonarr calendar. Please try again later."
+          )
           .setColor("Red");
         return interaction.reply({ embeds: [embed], ephemeral: true });
       }

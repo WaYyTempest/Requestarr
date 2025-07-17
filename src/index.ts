@@ -1,5 +1,5 @@
-// Main entry point for the Discord bot
 import { Client, Collection, EmbedBuilder } from "discord.js";
+import Redis from "ioredis";
 import path from "path";
 import { intents } from "./client/intents";
 import { partials } from "./client/partials";
@@ -9,15 +9,16 @@ import { readEvents } from "./handler/eventhandler";
 import { Command, CustomClient } from "./Requestarr/customclient";
 import { registerCommands } from "./Requestarr/deploy";
 import { logError, logInfo } from "./utils/logger";
-import Redis from "ioredis";
 
-const isDev = process.env.NODE_ENV === "devloppement";
+const isDev = process.env.NODE_ENV === "development";
 const userMP = process.env.OWNER;
 
 // Initialize Redis only in production mode
 let redis: Redis | null = null;
 if (!isDev) {
-  redis = process.env.REDIS_URL ? new Redis(process.env.REDIS_URL) : new Redis();
+  redis = process.env.REDIS_URL
+    ? new Redis(process.env.REDIS_URL)
+    : new Redis();
 }
 
 // Create the Discord client with custom properties (CustomClient)
@@ -39,7 +40,9 @@ async function main() {
       client.disabledCommands = new Set();
     } else {
       // Load disabled commands from Redis in production
-      client.disabledCommands = new Set(await redis!.smembers("disabled_commands"));
+      client.disabledCommands = new Set(
+        await redis!.smembers("disabled_commands")
+      );
     }
 
     // Dynamically load commands and events

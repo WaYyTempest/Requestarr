@@ -4,8 +4,8 @@ import {
   GuildMember,
   SlashCommandBuilder,
 } from "discord.js";
-import { createEmbedTemplate } from "../modules/embed";
-import { CustomClient } from "../Requestarr/customclient";
+import { createEmbedTemplate } from "../../modules/embed";
+import { CustomClient } from "../../Requestarr/customclient";
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -44,7 +44,7 @@ module.exports = {
     if (!query) {
       // Reply if no query provided
       const embed = createEmbedTemplate(
-        "⚠️ » Error",
+        "``⚠️`` » Error",
         "Please provide a query.",
         interaction.user
       ).setColor("Red");
@@ -68,7 +68,7 @@ module.exports = {
       if (!item) {
         // No results found
         const embed = createEmbedTemplate(
-          "⚠️ » No Results",
+          "``⚠️`` » No Results",
           `No results found for "${query}".`,
           interaction.user
         ).setColor("Yellow");
@@ -106,7 +106,7 @@ module.exports = {
       // Handle errors from the API request
       console.error("Error fetching data:", error);
       const embed = createEmbedTemplate(
-        "❌ » Error",
+        "``❌`` » Error",
         "There was an error fetching the data. Please try again later.",
         interaction.user
       ).setColor("Red");

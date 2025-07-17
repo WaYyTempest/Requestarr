@@ -1,50 +1,80 @@
-import { SlashCommandBuilder, ChatInputCommandInteraction } from "discord.js";
+import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
+import fs from "fs";
+import Redis from "ioredis";
 import path from "path";
 import { CustomClient } from "../Requestarr/customclient";
 import { createEmbedTemplate } from "../modules/embed";
-import Redis from "ioredis";
 
-const redis = process.env.REDIS_URL ? new Redis(process.env.REDIS_URL) : new Redis();
+const redis = process.env.REDIS_URL
+  ? new Redis(process.env.REDIS_URL)
+  : new Redis();
+
+// Recursive function to get all command files in the directory and its subdirectories
+function getAllCommandFiles(dir: string, fileList: string[] = []) {
+  const files = fs.readdirSync(dir);
+  for (const file of files) {
+    const fullPath = path.join(dir, file);
+    if (fs.statSync(fullPath).isDirectory()) {
+      getAllCommandFiles(fullPath, fileList);
+    } else if (
+      (file.endsWith(".js") || file.endsWith(".ts")) &&
+      !file.startsWith("module.")
+    ) {
+      fileList.push(fullPath);
+    }
+  }
+  return fileList;
+}
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("module")
     .setDescription("🛠️ Dynamically manage bot commands")
-    .addSubcommand(sub =>
+    .addSubcommand((sub) =>
       sub
         .setName("reload")
         .setDescription("🔄 Reload a command")
-        .addStringOption(opt =>
-          opt.setName("command").setDescription("📝 Command name").setRequired(true)
+        .addStringOption((opt) =>
+          opt
+            .setName("command")
+            .setDescription("📝 Command name")
+            .setRequired(true)
         )
     )
-    .addSubcommand(sub =>
+    .addSubcommand((sub) =>
       sub
         .setName("enable")
         .setDescription("✅ Enable a command")
-        .addStringOption(opt =>
-          opt.setName("command").setDescription("📝 Command name").setRequired(true)
+        .addStringOption((opt) =>
+          opt
+            .setName("command")
+            .setDescription("📝 Command name")
+            .setRequired(true)
         )
     )
-    .addSubcommand(sub =>
+    .addSubcommand((sub) =>
       sub
         .setName("disable")
         .setDescription("🚫 Disable a command")
-        .addStringOption(opt =>
-          opt.setName("command").setDescription("📝 Command name").setRequired(true)
+        .addStringOption((opt) =>
+          opt
+            .setName("command")
+            .setDescription("📝 Command name")
+            .setRequired(true)
         )
     )
-    .addSubcommand(sub =>
-      sub
-        .setName("show")
-        .setDescription("📋 Show the status of all commands")
+    .addSubcommand((sub) =>
+      sub.setName("show").setDescription("📋 Show the status of all commands")
     ),
-  execute: async (client: CustomClient, interaction: ChatInputCommandInteraction) => {
+  execute: async (
+    client: CustomClient,
+    interaction: ChatInputCommandInteraction
+  ) => {
     const ownerId = process.env.OWNER;
     if (interaction.user.id !== ownerId) {
       // Only the bot owner can use this command
       const embed = createEmbedTemplate(
-        "⛔ Access Denied",
+        "``⛔`` Access Denied",
         "Only the bot owner can use this command.",
         interaction.user
       ).setColor("Red");
@@ -57,21 +87,49 @@ module.exports = {
       commandName = interaction.options.getString("command", true);
     }
 
+    // Helper to find a command file by name recursively
+    function findCommandFileByName(
+      commandsPath: string,
+      name: string
+    ): string | undefined {
+      const files = getAllCommandFiles(commandsPath);
+      for (const file of files) {
+        let cmd;
+        try {
+          cmd = require(file);
+        } catch (e) {
+          continue;
+        }
+        const cmdName =
+          cmd.data?.name || path.basename(file).replace(/\.(js|ts)$/, "");
+        if (cmdName === name) {
+          return file;
+        }
+      }
+      return undefined;
+    }
+
     if (sub === "show") {
-      // Show the status (active/inactive) of all commands
-      const fs = require("fs");
-      const path = require("path");
+      // Show the status (active/inactive) of all commands (recursive)
       const commandsPath = path.join(__dirname, "../commands");
-      const files = fs.readdirSync(commandsPath).filter((file: string) => file.endsWith(".js") && file !== "module.js");
+      const files = getAllCommandFiles(commandsPath);
       let description = "";
       for (const file of files) {
-        const cmd = require(path.join(commandsPath, file));
-        const name = cmd.data?.name || file.replace(/\.js$/, "");
+        let cmd;
+        try {
+          cmd = require(file);
+        } catch (e) {
+          continue;
+        }
+        const name =
+          cmd.data?.name || path.basename(file).replace(/\.(js|ts)$/, "");
         const isActive = !client.disabledCommands?.has(name);
-        description += `\n\n${isActive ? "✨" : "❌"}  \`${name}\` ${isActive ? "(active)" : "(inactive)"}`;
+        description += `\n\n${isActive ? "✨" : "❌"}  \`${name}\` ${
+          isActive ? "(active)" : "(inactive)"
+        }`;
       }
       const embed = createEmbedTemplate(
-        "📋 Command Status",
+        "``📋`` Command Status",
         description || "No commands found.",
         interaction.user
       ).setColor("Blue");
@@ -80,13 +138,14 @@ module.exports = {
 
     if (sub === "reload") {
       try {
-        // Dynamically reload a command module
-        const commandPath = path.join(__dirname, commandName! + ".js");
-        delete require.cache[require.resolve(commandPath)];
-        const newCommand = require(commandPath);
+        const commandsPath = path.join(__dirname, "../commands");
+        const commandFile = findCommandFileByName(commandsPath, commandName!);
+        if (!commandFile) throw new Error("Command not found");
+        delete require.cache[require.resolve(commandFile)];
+        const newCommand = require(commandFile);
         client.commands.set(newCommand.data.name, newCommand);
         const embed = createEmbedTemplate(
-          "🔄 Command Reloaded",
+          "``🔄`` Command Reloaded",
           `🔄 Command \`${commandName}\` has been reloaded!`,
           interaction.user
         ).setColor("Green");
@@ -94,7 +153,7 @@ module.exports = {
       } catch (err) {
         // Handle errors during reload
         const embed = createEmbedTemplate(
-          "❌ Reload Error",
+          "``❌`` Reload Error",
           `❌ Error while reloading: \`${err}\``,
           interaction.user
         ).setColor("Red");
@@ -106,18 +165,22 @@ module.exports = {
       // Prevent disabling the module command itself
       if (commandName === "module") {
         const embed = createEmbedTemplate(
-          "⚠️ Action Forbidden",
-          "⚠️ You cannot disable the `module` command.",
+          "``⚠️`` Action Forbidden",
+          "``⚠️`` You cannot disable the `module` command.",
           interaction.user
         ).setColor("Orange");
         return interaction.reply({ embeds: [embed], ephemeral: true });
       }
       // Disable a command (update Redis and local set)
       if (!client.disabledCommands) client.disabledCommands = new Set();
-      await redis.sadd("disabled_commands", commandName!);
-      client.disabledCommands.add(commandName!);
+      if (process.env.NODE_ENV === "development") {
+        client.disabledCommands.add(commandName!);
+      } else {
+        await redis.sadd("disabled_commands", commandName!);
+        client.disabledCommands.add(commandName!);
+      }
       const embed = createEmbedTemplate(
-        "🚫 Command Disabled",
+        "``🚫`` Command Disabled",
         `🚫 Command \`${commandName}\` has been disabled.`,
         interaction.user
       ).setColor("Orange");
@@ -125,14 +188,18 @@ module.exports = {
     }
     if (sub === "enable") {
       // Enable a command (update Redis and local set)
-      await redis.srem("disabled_commands", commandName!);
-      client.disabledCommands.delete(commandName!);
+      if (process.env.NODE_ENV === "development") {
+        client.disabledCommands.delete(commandName!);
+      } else {
+        await redis.srem("disabled_commands", commandName!);
+        client.disabledCommands.delete(commandName!);
+      }
       const embed = createEmbedTemplate(
-        "✅ Command Enabled",
+        "``✅`` Command Enabled",
         `✅ Command \`${commandName}\` has been enabled.`,
         interaction.user
       ).setColor("Green");
       await interaction.reply({ embeds: [embed], ephemeral: true });
     }
-  }
+  },
 };
