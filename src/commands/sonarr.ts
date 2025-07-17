@@ -60,7 +60,9 @@ module.exports = {
     const query = interaction.options.getString("query");
 
     if (sub === "add") {
+      // Handle adding a series to Sonarr
       if (!query) {
+        // Reply if no query provided
         const embed = createEmbedTemplate(
           "⚠️ » Error",
           "Please provide a series name.",
@@ -69,16 +71,18 @@ module.exports = {
         return interaction.reply({ embeds: [embed], ephemeral: true });
       }
       try {
-        // Détection TMDb : si la query est un nombre, on recherche par tmdb:ID
+        // If the query is a number, treat it as a TMDb ID
         let searchTerm = query;
         if (/^\d+$/.test(query)) {
           searchTerm = `tmdb:${query}`;
         }
+        // Search for the series in Sonarr
         const searchUrl = `${SONARR_URL}/series/lookup?term=${encodeURIComponent(searchTerm)}`;
         const { data } = await axios.get(searchUrl, {
           headers: { "X-Api-Key": SONARR_TOKEN },
         });
 
+        // If no results, reply to user
         if (!data.length) {
           const embed = createEmbedTemplate(
             "⚠️ » No Results",
@@ -88,6 +92,7 @@ module.exports = {
           return interaction.reply({ embeds: [embed], ephemeral: true });
         }
 
+        // Get the root folder path from Sonarr
         const rootFoldersUrl = `${SONARR_URL}/rootfolder`;
         const { data: rootFolders } = await axios.get(rootFoldersUrl, {
           headers: { "X-Api-Key": SONARR_TOKEN },
@@ -104,18 +109,18 @@ module.exports = {
 
         if (data.length === 1) {
           const serie = data[0];
-          // Vérifier si la série existe déjà dans la bibliothèque
+          // Check if the series already exists in the library
           const seriesUrl = `${SONARR_URL}/series`;
           const { data: allSeries } = await axios.get(seriesUrl, {
             headers: { "X-Api-Key": SONARR_TOKEN },
           });
           const alreadyExists = allSeries.some((s: any) => s.tvdbId === serie.tvdbId || s.titleSlug === serie.titleSlug || (s.tmdbId && serie.tmdbId && s.tmdbId === serie.tmdbId));
           if (alreadyExists) {
-            // Mettre à jour la série pour qu'elle soit monitored
+            // If the series exists but is not monitored, enable monitoring
             const existingSerie = allSeries.find((s: any) => s.tvdbId === serie.tvdbId || s.titleSlug === serie.titleSlug || (s.tmdbId && serie.tmdbId && s.tmdbId === serie.tmdbId));
             if (existingSerie && !existingSerie.monitored) {
               const updateUrl = `${SONARR_URL}/series/${existingSerie.id}`;
-              // On monitore toutes les saisons sauf les specials (seasonNumber === 0)
+              // Monitor all seasons except specials (seasonNumber === 0)
               const seasons = (existingSerie.seasons || []).map((season: any) => ({
                 ...season,
                 monitored: season.seasonNumber !== 0
@@ -130,6 +135,7 @@ module.exports = {
               ).setColor("Green");
               return interaction.reply({ embeds: [embed], ephemeral: true });
             } else {
+              // Reply if already present and monitored
               const embed = createEmbedTemplate(
                 "ℹ️ » Already Present",
                 `The series **${serie.title}** is already in the Sonarr library!`,
@@ -138,6 +144,7 @@ module.exports = {
               return interaction.reply({ embeds: [embed], ephemeral: true });
             }
           }
+          // Add the series to Sonarr
           const addUrl = `${SONARR_URL}/series`;
           const addPayload = {
             title: serie.title,
@@ -162,6 +169,7 @@ module.exports = {
           return interaction.reply({ embeds: [embed] });
         }
 
+        // If multiple results, show paginated embed with navigation buttons
         let page = 0;
         const totalPages = data.length;
         const getEmbed = (page: number) => {
@@ -194,6 +202,7 @@ module.exports = {
           embeds: [getEmbed(page)],
           components: [getRow(page)]
         });
+        // Create a collector for button navigation
         const collector = interaction.channel?.createMessageComponentCollector({
           filter: i => i.user.id === interaction.user.id,
           componentType: ComponentType.Button,
@@ -252,6 +261,7 @@ module.exports = {
         });
         return;
       } catch (error) {
+        // Log and reply on error
         console.error("Error adding series to Sonarr:", error);
         const embed = createEmbedTemplate(
           "❌ » Error",
@@ -263,7 +273,9 @@ module.exports = {
     }
 
     if (sub === "remove") {
+      // Handle removing a series from Sonarr
       if (!query) {
+        // Reply if no query provided
         const embed = createEmbedTemplate(
           "⚠️ » Error",
           "Please provide a series name.",
@@ -272,12 +284,14 @@ module.exports = {
         return interaction.reply({ embeds: [embed], ephemeral: true });
       }
       try {
+        // Fetch all series and find the one to remove
         const seriesUrl = `${SONARR_URL}/series`;
         const { data: allSeries } = await axios.get(seriesUrl, {
           headers: { "X-Api-Key": SONARR_TOKEN },
         });
         const found = allSeries.find((s: any) => s.title.toLowerCase() === query.toLowerCase());
         if (!found) {
+          // Reply if not found
           const embed = createEmbedTemplate(
             "⚠️ » Not Found",
             `No series found for "${query}" in Sonarr.`,
@@ -285,6 +299,7 @@ module.exports = {
           ).setColor("Yellow");
           return interaction.reply({ embeds: [embed], ephemeral: true });
         }
+        // Remove the series from Sonarr
         const deleteUrl = `${SONARR_URL}/series/${found.id}?deleteFiles=true&addImportListExclusion=false`;
         await axios.delete(deleteUrl, {
           headers: { "X-Api-Key": SONARR_TOKEN },
@@ -297,6 +312,7 @@ module.exports = {
         ).setColor("Green");
         return interaction.reply({ embeds: [embed] });
       } catch (error) {
+        // Reply on error
         console.error("Error removing series from Sonarr:", error);
         const embed = createEmbedTemplate(
           "❌ » Error",
@@ -308,7 +324,9 @@ module.exports = {
     }
 
     if (sub === "calendar") {
+      // Handle displaying the Sonarr calendar
       try {
+        // Get the next 14 days of episodes
         const today = new Date();
         const start = today.toISOString().split("T")[0];
         const endDate = new Date(today.getTime() + 14 * 24 * 60 * 60 * 1000);
@@ -318,12 +336,14 @@ module.exports = {
           headers: { "X-Api-Key": SONARR_TOKEN },
         });
         if (!episodes.length) {
+          // Reply if no episodes found
           const embed = new EmbedBuilder()
             .setTitle("📅 Sonarr Calendar")
             .setDescription("No upcoming episodes found.")
             .setColor("Blue");
           return interaction.reply({ embeds: [embed]});
         }
+        // Paginate episodes, 5 per page
         const pageSize = 5;
         let page = 0;
         const totalPages = Math.ceil(episodes.length / pageSize);
@@ -355,6 +375,7 @@ module.exports = {
           components: totalPages > 1 ? [getRow(page)] : []
         });
         if (totalPages > 1) {
+          // Create a collector for calendar navigation
           const collector = interaction.channel?.createMessageComponentCollector({
             filter: i => i.user.id === interaction.user.id,
             componentType: ComponentType.Button,
@@ -376,6 +397,7 @@ module.exports = {
           });
         }
       } catch (error) {
+        // Reply on error
         console.error("Error fetching Sonarr calendar:", error);
         const embed = new EmbedBuilder()
           .setTitle("❌ » Error")
