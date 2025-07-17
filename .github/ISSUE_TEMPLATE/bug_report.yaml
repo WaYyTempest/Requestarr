@@ -23,7 +23,7 @@ body:
       2. Go to Settings
       3. Click Save
       4. Error appears
-      render: bash
+    render: bash
     validations:
       required: true
 
