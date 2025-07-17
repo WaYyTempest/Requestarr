@@ -1,0 +1,22 @@
+name: "💡 Feature Request"
+description: Suggest a new feature or improvement for this project.
+title: "💡 [FEAT] - <title>"
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: feature
+    attributes:
+      label: "Feature Description"
+      description: Clearly describe the feature or improvement you are suggesting.
+      placeholder: Describe your feature idea in detail.
+    validations:
+      required: true
+
+  - type: textarea
+    id: benefits
+    attributes:
+      label: "Why is this useful?"
+      description: Explain why this feature would be valuable or how it improves the project.
+      placeholder: Describe the benefits or impact of this feature.
+    validations:
+      required: false
