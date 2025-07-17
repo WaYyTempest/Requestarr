@@ -26,17 +26,17 @@ module.exports = {
     .addSubcommand(sub =>
       sub
         .setName("add")
-        .setDescription("➕ Add a series to Sonarr")
+        .setDescription("➕ Add a series to Sonarr (supports TMDb ID)")
         .addStringOption(option =>
-          option.setName("query").setDescription("Series name").setRequired(true)
+          option.setName("query").setDescription("Series name or TMDb ID").setRequired(true)
         )
     )
     .addSubcommand(sub =>
       sub
         .setName("remove")
-        .setDescription("❌ Remove a series from Sonarr")
+        .setDescription("❌ Remove a series from Sonarr (supports TMDb ID)")
         .addStringOption(option =>
-          option.setName("query").setDescription("Series name").setRequired(true)
+          option.setName("query").setDescription("Series name or TMDb ID").setRequired(true)
         )
     )
     .addSubcommand(sub =>
@@ -69,7 +69,12 @@ module.exports = {
         return interaction.reply({ embeds: [embed], ephemeral: true });
       }
       try {
-        const searchUrl = `${SONARR_URL}/series/lookup?term=${encodeURIComponent(query)}`;
+        // Détection TMDb : si la query est un nombre, on recherche par tmdb:ID
+        let searchTerm = query;
+        if (/^\d+$/.test(query)) {
+          searchTerm = `tmdb:${query}`;
+        }
+        const searchUrl = `${SONARR_URL}/series/lookup?term=${encodeURIComponent(searchTerm)}`;
         const { data } = await axios.get(searchUrl, {
           headers: { "X-Api-Key": SONARR_TOKEN },
         });
@@ -99,6 +104,40 @@ module.exports = {
 
         if (data.length === 1) {
           const serie = data[0];
+          // Vérifier si la série existe déjà dans la bibliothèque
+          const seriesUrl = `${SONARR_URL}/series`;
+          const { data: allSeries } = await axios.get(seriesUrl, {
+            headers: { "X-Api-Key": SONARR_TOKEN },
+          });
+          const alreadyExists = allSeries.some((s: any) => s.tvdbId === serie.tvdbId || s.titleSlug === serie.titleSlug || (s.tmdbId && serie.tmdbId && s.tmdbId === serie.tmdbId));
+          if (alreadyExists) {
+            // Mettre à jour la série pour qu'elle soit monitored
+            const existingSerie = allSeries.find((s: any) => s.tvdbId === serie.tvdbId || s.titleSlug === serie.titleSlug || (s.tmdbId && serie.tmdbId && s.tmdbId === serie.tmdbId));
+            if (existingSerie && !existingSerie.monitored) {
+              const updateUrl = `${SONARR_URL}/series/${existingSerie.id}`;
+              // On monitore toutes les saisons sauf les specials (seasonNumber === 0)
+              const seasons = (existingSerie.seasons || []).map((season: any) => ({
+                ...season,
+                monitored: season.seasonNumber !== 0
+              }));
+              await axios.put(updateUrl, { ...existingSerie, monitored: true, seasons }, {
+                headers: { "X-Api-Key": SONARR_TOKEN },
+              });
+              const embed = createEmbedTemplate(
+                "✅ » Monitoring Enabled",
+                `The series **${serie.title}** is already in the Sonarr library and is now set to monitored!`,
+                interaction.user
+              ).setColor("Green");
+              return interaction.reply({ embeds: [embed], ephemeral: true });
+            } else {
+              const embed = createEmbedTemplate(
+                "ℹ️ » Already Present",
+                `The series **${serie.title}** is already in the Sonarr library!`,
+                interaction.user
+              ).setColor("Yellow");
+              return interaction.reply({ embeds: [embed], ephemeral: true });
+            }
+          }
           const addUrl = `${SONARR_URL}/series`;
           const addPayload = {
             title: serie.title,

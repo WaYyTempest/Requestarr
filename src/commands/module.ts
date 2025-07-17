@@ -2,6 +2,9 @@ import { SlashCommandBuilder, ChatInputCommandInteraction } from "discord.js";
 import path from "path";
 import { CustomClient } from "../Requestarr/customclient";
 import { createEmbedTemplate } from "../modules/embed";
+import Redis from "ioredis";
+
+const redis = process.env.REDIS_URL ? new Redis(process.env.REDIS_URL) : new Redis();
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -105,6 +108,7 @@ module.exports = {
         return interaction.reply({ embeds: [embed], ephemeral: true });
       }
       if (!client.disabledCommands) client.disabledCommands = new Set();
+      await redis.sadd("disabled_commands", commandName!);
       client.disabledCommands.add(commandName!);
       const embed = createEmbedTemplate(
         "🚫 Command Disabled",
@@ -114,6 +118,7 @@ module.exports = {
       await interaction.reply({ embeds: [embed], ephemeral: true });
     }
     if (sub === "enable") {
+      await redis.srem("disabled_commands", commandName!);
       client.disabledCommands.delete(commandName!);
       const embed = createEmbedTemplate(
         "✅ Command Enabled",
