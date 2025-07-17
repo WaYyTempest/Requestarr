@@ -48,6 +48,7 @@ module.exports = {
     client: CustomClient,
     interaction: ChatInputCommandInteraction & { member: GuildMember }
   ) => {
+    // Restrict command to owner if PUBLIC_ARR is not enabled
     if (process.env.PUBLIC_ARR !== 'true' && interaction.user.id !== process.env.OWNER) {
       const embed = createEmbedTemplate(
         'Command Disabled',
@@ -60,9 +61,8 @@ module.exports = {
     const query = interaction.options.getString("query");
 
     if (sub === "add") {
-      // Handle adding a series to Sonarr
+      // Add a series to Sonarr
       if (!query) {
-        // Reply if no query provided
         const embed = createEmbedTemplate(
           "⚠️ » Error",
           "Please provide a series name.",
@@ -71,7 +71,7 @@ module.exports = {
         return interaction.reply({ embeds: [embed], ephemeral: true });
       }
       try {
-        // If the query is a number, treat it as a TMDb ID
+        // Support TMDb ID as search term
         let searchTerm = query;
         if (/^\d+$/.test(query)) {
           searchTerm = `tmdb:${query}`;
@@ -82,7 +82,7 @@ module.exports = {
           headers: { "X-Api-Key": SONARR_TOKEN },
         });
 
-        // If no results, reply to user
+        // No results found
         if (!data.length) {
           const embed = createEmbedTemplate(
             "⚠️ » No Results",
@@ -135,7 +135,7 @@ module.exports = {
               ).setColor("Green");
               return interaction.reply({ embeds: [embed], ephemeral: true });
             } else {
-              // Reply if already present and monitored
+              // Already present and monitored
               const embed = createEmbedTemplate(
                 "ℹ️ » Already Present",
                 `The series **${serie.title}** is already in the Sonarr library!`,
@@ -169,9 +169,10 @@ module.exports = {
           return interaction.reply({ embeds: [embed] });
         }
 
-        // If multiple results, show paginated embed with navigation buttons
+        // Multiple results: show paginated embed with navigation buttons
         let page = 0;
         const totalPages = data.length;
+        // Helper to build the embed for a given page
         const getEmbed = (page: number) => {
           const serie = data[page];
           const poster = serie.images?.find((img: any) => img.coverType === "poster")?.remoteUrl;
@@ -182,6 +183,7 @@ module.exports = {
             .setFooter({ text: `Result ${page + 1}/${totalPages}` })
             .setColor("Blue");
         };
+        // Helper to build the navigation row for a given page
         const getRow = (page: number) => new ActionRowBuilder<ButtonBuilder>().addComponents(
           new ButtonBuilder()
             .setCustomId("grab")
@@ -202,7 +204,7 @@ module.exports = {
           embeds: [getEmbed(page)],
           components: [getRow(page)]
         });
-        // Create a collector for button navigation
+        // Collector for button navigation
         const collector = interaction.channel?.createMessageComponentCollector({
           filter: i => i.user.id === interaction.user.id,
           componentType: ComponentType.Button,

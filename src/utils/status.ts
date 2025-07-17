@@ -1,6 +1,7 @@
 import { ActivityType } from "discord.js";
 import { CustomClient } from "../Requestarr/customclient";
 
+// Set the bot's Discord status and activity depending on the environment
 export async function setStatus(client: CustomClient) {
   const isDevelopment = process.env.NODE_ENV === "development";
   const status = isDevelopment ? "idle" : "online";

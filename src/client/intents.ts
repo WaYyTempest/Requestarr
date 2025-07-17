@@ -1,5 +1,6 @@
 import { IntentsBitField } from "discord.js";
 
+// List of Discord gateway intents required by the bot
 export const intents = [
   IntentsBitField.Flags.Guilds,
   IntentsBitField.Flags.GuildMembers,

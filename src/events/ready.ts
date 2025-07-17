@@ -11,6 +11,7 @@ module.exports = {
   name: "ready",
   once: true,
   async execute(client: CustomClient) {
+    // Fetch all application commands and print startup info
     await client.application?.commands.fetch();
     const commandCount = client.application?.commands.cache.size ?? 0;
     const formattedDate = formatDate(new Date());
@@ -31,8 +32,10 @@ module.exports = {
 `;
     console.log(`${asciiArt}\n${details}`);
 
+    // Set the bot's status and update it every hour
     await setStatus(client);
     setInterval(() => setStatus(client), 3600000);
+    // Schedule daily anime notification if enabled
     cron.schedule("0 1 * * *", async () => {
       if (process.env.NOTIF_ANIME !== "false") {
         await sendAnimeScheduleWithButtons(client);

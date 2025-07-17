@@ -1,8 +1,10 @@
 import { ColorResolvable } from "discord.js";
 import { DateTime } from "luxon";
 
+// Maximum length allowed for Discord embed descriptions
 export const MAX_DESCRIPTION_LENGTH = 4096;
 
+// List of days of the week (Monday-based)
 export const DAYS_OF_WEEK = [
   "monday",
   "tuesday",
@@ -13,6 +15,7 @@ export const DAYS_OF_WEEK = [
   "sunday",
 ];
 
+// Color mapping for each day of the week
 export const DAY_COLORS: { [key: string]: ColorResolvable } = {
   monday: "Orange",
   tuesday: "Yellow",
@@ -23,6 +26,7 @@ export const DAY_COLORS: { [key: string]: ColorResolvable } = {
   sunday: "Red",
 };
 
+// Truncate a string to fit within Discord's embed description limit
 export const truncateDescription = (description: string): string => {
   return description.length > MAX_DESCRIPTION_LENGTH
     ? description.substring(0, MAX_DESCRIPTION_LENGTH - 3) + "..."

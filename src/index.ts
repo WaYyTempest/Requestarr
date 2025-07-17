@@ -1,3 +1,4 @@
+// Main entry point for the Discord bot
 import { Client, Collection, EmbedBuilder } from "discord.js";
 import path from "path";
 import { intents } from "./client/intents";
@@ -13,30 +14,38 @@ import Redis from "ioredis";
 const isDev = process.env.NODE_ENV === "devloppement";
 const userMP = process.env.OWNER;
 
+// Initialize Redis only in production mode
 let redis: Redis | null = null;
 if (!isDev) {
   redis = process.env.REDIS_URL ? new Redis(process.env.REDIS_URL) : new Redis();
 }
 
+// Create the Discord client with custom properties (CustomClient)
 export const client = new Client({
   intents,
   partials,
 }) as CustomClient;
 
+// Main async function to initialize the bot
 async function main() {
   try {
+    // Login to Discord
     await client.login(ENV.TOKEN);
 
+    // Initialize command and cooldown collections
     client.commands = new Collection<string, Command>();
     client.cooldowns = new Collection<string, Collection<string, number>>();
     if (isDev) {
       client.disabledCommands = new Set();
     } else {
+      // Load disabled commands from Redis in production
       client.disabledCommands = new Set(await redis!.smembers("disabled_commands"));
     }
 
+    // Dynamically load commands and events
     readCommands(client, path.join(__dirname, "commands"));
     readEvents(client, path.join(__dirname, "events"));
+    // Register slash commands with Discord API
     await registerCommands();
   } catch (error) {
     logError("Error during bot initialization", error);
@@ -45,7 +54,7 @@ async function main() {
 }
 main();
 
-
+// Global error handler for uncaught exceptions
 process.on("uncaughtException", async (error) => {
   logError("Uncaught Exception", error);
   if (!userMP || process.env.TraceError !== "true") return;
@@ -118,6 +127,7 @@ ${error.stack ? error.stack.split("\n")[0] : "No source available"}\
   }
 });
 
+// Global error handler for unhandled promise rejections
 process.on("unhandledRejection", async (reason: any) => {
   logError("Unhandled Rejection", reason);
   if (!userMP || process.env.TraceError !== "true") return;

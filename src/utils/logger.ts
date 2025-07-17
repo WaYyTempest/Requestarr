@@ -1,5 +1,6 @@
 import winston from "winston";
 
+// Emoji mapping for log levels
 const levelEmojis: { [key: string]: string } = {
   info: "ℹ️",
   error: "❌",
@@ -8,6 +9,7 @@ const levelEmojis: { [key: string]: string } = {
   debug: "✏️",
 };
 
+// Winston logger configuration with timestamp and emoji formatting
 const logger = winston.createLogger({
   level: "info",
   format: winston.format.combine(
@@ -29,6 +31,7 @@ const logger = winston.createLogger({
   ],
 });
 
+// Log a message with a given level, action, and optional stack trace
 export function logMessage(
   level: string,
   action: string,
@@ -41,6 +44,7 @@ export function logMessage(
   logger.log({ level, message: logMessage });
 }
 
+// Log an error or fatal event with details and stack trace
 export function logError(action: string, error: unknown, source?: string) {
   const status = error instanceof Error ? "error" : "fatal";
   const message =
@@ -52,10 +56,12 @@ export function logError(action: string, error: unknown, source?: string) {
   logMessage(status, action, formattedMessage);
 }
 
+// Log an informational message
 export function logInfo(action: string, message: string) {
   logMessage("info", action, message);
 }
 
+// Retry a function several times with delay between attempts
 export async function retry(
   fn: () => Promise<void>,
   retries = 3,

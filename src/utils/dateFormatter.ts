@@ -1,3 +1,4 @@
+// Format a Date object to a French date-time string (dd/mm/yyyy hh:mm:ss)
 export function formatDate(date: Date): string {
   return date
     .toLocaleString("fr-FR", {

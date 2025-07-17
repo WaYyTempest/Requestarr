@@ -20,16 +20,35 @@ services:
     image: wayytempest/requestarr
     restart: unless-stopped
     environment:
-      - SONARR_TOKEN=token
-      - SONARR_URL=http://localhost:8989
-      - RADARR_TOKEN=token
-      - RADARR_URL=http://localhost:7878
-      - TOKEN=token
-      - CLIENTID=clientid
-      - TraceError=false
-      - PUBLIC_ARR=false
-      - OWNER=id
-      - NODE_ENV=production
+    - SONARR_TOKEN=token
+    - SONARR_URL=http://localhost:8989
+    - RADARR_TOKEN=token
+    - RADARR_URL=http://localhost:7878
+    - TOKEN=token
+    - CLIENTID=clientid
+    - TraceError=false
+    - PUBLIC_ARR=false
+    - OWNER=id
+    - NODE_ENV=production
+    - NOTIF_ANIME=false
+    - REDIS_URL=redis:6379
+    depends_on:
+      redis:
+        condition: service_healthy
+  redis:
+    networks:
+      - requestarr
+    image: redis:8.2-rc1-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+networks:
+  requestarr:
+    external: true
 ```
 
 ## Manual Installation

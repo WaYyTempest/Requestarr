@@ -42,6 +42,7 @@ module.exports = {
   execute: async (client: CustomClient, interaction: ChatInputCommandInteraction) => {
     const ownerId = process.env.OWNER;
     if (interaction.user.id !== ownerId) {
+      // Only the bot owner can use this command
       const embed = createEmbedTemplate(
         "⛔ Access Denied",
         "Only the bot owner can use this command.",
@@ -57,6 +58,7 @@ module.exports = {
     }
 
     if (sub === "show") {
+      // Show the status (active/inactive) of all commands
       const fs = require("fs");
       const path = require("path");
       const commandsPath = path.join(__dirname, "../commands");
@@ -78,6 +80,7 @@ module.exports = {
 
     if (sub === "reload") {
       try {
+        // Dynamically reload a command module
         const commandPath = path.join(__dirname, commandName! + ".js");
         delete require.cache[require.resolve(commandPath)];
         const newCommand = require(commandPath);
@@ -89,6 +92,7 @@ module.exports = {
         ).setColor("Green");
         await interaction.reply({ embeds: [embed], ephemeral: true });
       } catch (err) {
+        // Handle errors during reload
         const embed = createEmbedTemplate(
           "❌ Reload Error",
           `❌ Error while reloading: \`${err}\``,
@@ -99,6 +103,7 @@ module.exports = {
     }
 
     if (sub === "disable") {
+      // Prevent disabling the module command itself
       if (commandName === "module") {
         const embed = createEmbedTemplate(
           "⚠️ Action Forbidden",
@@ -107,6 +112,7 @@ module.exports = {
         ).setColor("Orange");
         return interaction.reply({ embeds: [embed], ephemeral: true });
       }
+      // Disable a command (update Redis and local set)
       if (!client.disabledCommands) client.disabledCommands = new Set();
       await redis.sadd("disabled_commands", commandName!);
       client.disabledCommands.add(commandName!);
@@ -118,6 +124,7 @@ module.exports = {
       await interaction.reply({ embeds: [embed], ephemeral: true });
     }
     if (sub === "enable") {
+      // Enable a command (update Redis and local set)
       await redis.srem("disabled_commands", commandName!);
       client.disabledCommands.delete(commandName!);
       const embed = createEmbedTemplate(

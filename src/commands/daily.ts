@@ -24,10 +24,13 @@ module.exports = {
     interaction: ChatInputCommandInteraction & { member: GuildMember }
   ) => {
     try {
+      // Get today's day name (e.g., 'monday')
       const days = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
       const today = days[new Date().getDay()];
+      // Build the API URL for today's anime schedule
       const url = `https://api.jikan.moe/v4/schedules?filter=${today}`;
 
+      // Fetch anime schedule from Jikan API
       const response = await axios.get(url);
 
       if (!Array.isArray(response.data.data)) {
@@ -37,6 +40,7 @@ module.exports = {
       const schedules: Anime[] = response.data.data;
 
       if (schedules.length === 0) {
+        // No anime scheduled for today
         return interaction.reply({
           embeds: [
             createEmbedTemplate(
@@ -49,6 +53,7 @@ module.exports = {
         });
       }
 
+      // Format the list of today's anime releases (limit to 10)
       const animeList = schedules
         .slice(0, 10)
         .map((anime: Anime) => {
@@ -71,6 +76,7 @@ module.exports = {
         ],
       });
     } catch (error) {
+      // Handle errors and reply with an error message
       console.error("Error fetching anime schedule:", error);
       return interaction.reply({
         embeds: [
