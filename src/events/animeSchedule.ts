@@ -87,20 +87,7 @@ export async function sendAnimeScheduleWithButtons(client: CustomClient) {
 
       collector.on("end", async () => {
         try {
-          const disabledRow =
-            new ActionRowBuilder<ButtonBuilder>().addComponents(
-              new ButtonBuilder()
-                .setCustomId("prev_day")
-                .setLabel("⏮️ Previous")
-                .setStyle(ButtonStyle.Primary)
-                .setDisabled(true),
-              new ButtonBuilder()
-                .setCustomId("next_day")
-                .setLabel("⏭️ Next")
-                .setStyle(ButtonStyle.Primary)
-                .setDisabled(true)
-            );
-          await message.edit({ components: [disabledRow] });
+          await message.edit({ components: [] });
         } catch (e) {}
       });
     }
@@ -132,3 +119,10 @@ function createAnimeScheduleEmbed(
 function capitalize(word: string): string {
   return word.charAt(0).toUpperCase() + word.slice(1);
 }
+
+module.exports = {
+  name: "animeSchedule",
+  async execute(client: CustomClient) {
+    await sendAnimeScheduleWithButtons(client);
+  }
+};
