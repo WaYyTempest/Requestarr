@@ -25,7 +25,15 @@ module.exports = {
   ) => {
     try {
       // Get today's day name (e.g., 'monday')
-      const days = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+      const days = [
+        "sunday",
+        "monday",
+        "tuesday",
+        "wednesday",
+        "thursday",
+        "friday",
+        "saturday",
+      ];
       const today = days[new Date().getDay()];
       // Build the API URL for today's anime schedule
       const url = `https://api.jikan.moe/v4/schedules?filter=${today}`;
@@ -44,8 +52,10 @@ module.exports = {
         return interaction.reply({
           embeds: [
             createEmbedTemplate(
-              "⚠️ » No Releases",
-              `No anime is scheduled for today (${today.charAt(0).toUpperCase() + today.slice(1)}).`,
+              "``⚠️`` » No Releases",
+              `No anime is scheduled for today (${
+                today.charAt(0).toUpperCase() + today.slice(1)
+              }).`,
               interaction.user
             ).setColor("Yellow"),
           ],
@@ -69,7 +79,9 @@ module.exports = {
       return interaction.reply({
         embeds: [
           createEmbedTemplate(
-            `📅 » Anime Releases for ${today.charAt(0).toUpperCase() + today.slice(1)}`,
+            `📅 » Anime Releases for ${
+              today.charAt(0).toUpperCase() + today.slice(1)
+            }`,
             animeList,
             interaction.user
           ).setColor("Blue"),
@@ -81,7 +93,7 @@ module.exports = {
       return interaction.reply({
         embeds: [
           createEmbedTemplate(
-            "❌ » Error",
+            "``❌`` » Error",
             "Could not fetch today's anime releases. Please try again later.",
             interaction.user
           ).setColor("Red"),

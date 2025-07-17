@@ -7,8 +7,8 @@ import {
   EmbedBuilder,
   SlashCommandBuilder,
 } from "discord.js";
-import { createEmbedTemplate } from "../modules/embed";
-import { CustomClient } from "../Requestarr/customclient";
+import { createEmbedTemplate } from "../../modules/embed";
+import { CustomClient } from "../../Requestarr/customclient";
 interface Anime {
   mal_id: number;
   title: string;
@@ -109,7 +109,9 @@ module.exports = {
     .addSubcommand((subcommand) =>
       subcommand
         .setName("search")
-        .setDescription("🔍 Search MAL user stats and favorites (ex: /mal search username:MyAnimeListUser)")
+        .setDescription(
+          "🔍 Search MAL user stats and favorites (ex: /mal search username:MyAnimeListUser)"
+        )
         .addStringOption((option) =>
           option
             .setName("username")
@@ -120,7 +122,9 @@ module.exports = {
     .addSubcommand((subcommand) =>
       subcommand
         .setName("seasonal_anime")
-        .setDescription("📅 Show seasonal anime (ex: /mal seasonal_anime season:Spring year:2024)")
+        .setDescription(
+          "📅 Show seasonal anime (ex: /mal seasonal_anime season:Spring year:2024)"
+        )
         .addStringOption((option) =>
           option
             .setName("season")
@@ -153,7 +157,7 @@ module.exports = {
         const username = interaction.options.getString("username");
         if (!username) {
           return interaction.reply({
-            content: "⚠️ Please provide a MyAnimeList username.",
+            content: "``⚠️`` Please provide a MyAnimeList username.",
             ephemeral: true,
           });
         }
@@ -245,7 +249,7 @@ module.exports = {
 
         if (!season || !year) {
           const embed = createEmbedTemplate(
-            "⚠️ » Error",
+            "``⚠️`` » Error",
             "Please provide a valid season and year.",
             interaction.user
           ).setColor("Red");
@@ -260,7 +264,7 @@ module.exports = {
 
           if (!data?.data?.length) {
             const embed = createEmbedTemplate(
-              "⚠️ » No Anime",
+              "``⚠️`` » No Anime",
               "No anime found for the selected season and year.",
               interaction.user
             ).setColor("Yellow");
@@ -310,7 +314,7 @@ module.exports = {
         } catch (error) {
           console.error("Error fetching seasonal anime:", error);
           const embed = createEmbedTemplate(
-            "❌ » Error",
+            "``❌`` » Error",
             "Error fetching seasonal anime. Please try again later.",
             interaction.user
           ).setColor("Red");
@@ -320,7 +324,7 @@ module.exports = {
     } catch (error) {
       console.error("Error in MAL command:", error);
       const embed = createEmbedTemplate(
-        "❌ » Error",
+        "``❌`` » Error",
         "An error occurred while executing the command, please try again later.",
         interaction.user
       ).setColor("Red");
