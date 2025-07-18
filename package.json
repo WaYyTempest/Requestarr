@@ -1,7 +1,6 @@
 {
   "name": "requestarr",
   "module": "src/index.ts",
-  "type": "module",
   "devDependencies": {
     "@types/bun": "latest",
     "@types/figlet": "^1.7.0",
