@@ -1,24 +1,23 @@
-FROM node:20-alpine
+FROM oven/bun:alpine
 
 RUN adduser -D -s /bin/sh requestarr
 
 WORKDIR /srv/docker/requestarr
 
-COPY package.json ./
-COPY tsconfig.json ./
+COPY package.json tsconfig.json ./
 
 USER root
 
-RUN npm install
+RUN bun install --frozen-lockfile
 
 COPY src ./src
 COPY . .
 
 ENV TZ=Europe/Paris
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime \
+  && echo $TZ > /etc/timezone
 
 RUN chown -R requestarr:requestarr /srv/docker/requestarr
-
 USER requestarr
 
-CMD ["npm", "run", "start"]
+CMD ["bun", "run", "start"]
