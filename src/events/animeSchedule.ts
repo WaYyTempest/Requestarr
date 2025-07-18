@@ -128,9 +128,7 @@ function capitalize(word: string): string {
   return word.charAt(0).toUpperCase() + word.slice(1);
 }
 
-module.exports = {
-  name: "animeSchedule",
-  async execute(client: CustomClient) {
-    await sendAnimeScheduleWithButtons(client);
-  }
+export const name = "animeSchedule";
+export const execute = async (client: CustomClient) => {
+  await sendAnimeScheduleWithButtons(client);
 };

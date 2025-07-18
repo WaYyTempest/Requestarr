@@ -5,9 +5,12 @@ import path from "path";
 import { CustomClient } from "../Requestarr/customclient";
 import { createEmbedTemplate } from "../modules/embed";
 
-const redis = process.env.REDIS_URL
-  ? new Redis(process.env.REDIS_URL)
-  : new Redis();
+let redis: Redis | null = null;
+if (process.env.NODE_ENV !== "development") {
+  redis = process.env.REDIS_URL
+    ? new Redis(process.env.REDIS_URL)
+    : new Redis();
+}
 
 // Recursive function to get all command files in the directory and its subdirectories
 function getAllCommandFiles(dir: string, fileList: string[] = []) {
@@ -176,7 +179,9 @@ module.exports = {
       if (process.env.NODE_ENV === "development") {
         client.disabledCommands.add(commandName!);
       } else {
-        await redis.sadd("disabled_commands", commandName!);
+        if (redis) {
+          await redis.sadd("disabled_commands", commandName!);
+        }
         client.disabledCommands.add(commandName!);
       }
       const embed = createEmbedTemplate(
@@ -191,7 +196,9 @@ module.exports = {
       if (process.env.NODE_ENV === "development") {
         client.disabledCommands.delete(commandName!);
       } else {
-        await redis.srem("disabled_commands", commandName!);
+        if (redis) {
+          await redis.srem("disabled_commands", commandName!);
+        }
         client.disabledCommands.delete(commandName!);
       }
       const embed = createEmbedTemplate(
