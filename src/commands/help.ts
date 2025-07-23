@@ -39,6 +39,11 @@ module.exports = {
       mal: "/mal search username:MyAnimeListUser",
       daily: "/daily",
       module: "/module reload command:sonarr",
+      lidarr: '/lidarr add "Daft Punk"',
+      prowlarr: "/prowlarr indexers",
+      readarr: '/readarr add "Brandon Sanderson"',
+      whisparr: '/whisparr add "Inception"',
+      jellystat: "/jellystat",
     };
     const emojis: Record<string, string> = {
       sonarr: "📺",
