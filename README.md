@@ -2,6 +2,11 @@
 
 A modern Discord bot for managing TV series (Sonarr) and movies (Radarr) with advanced slash commands, interactive embeds, and dynamic module management.
 
+
+<p align="center">
+  <a href="https://kan.wayy.fr/wayy/requestarr">Roadmap</a>
+</p>
+
 ## Features
 - 📺 Add, remove, and view calendar for Sonarr series
 - 🎬 Add, remove, and view calendar for Radarr movies
