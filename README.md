@@ -1,10 +1,10 @@
-# Requestarr
+<h1 align="center">Requestarr</h1>
 
 A modern Discord bot for managing TV series (Sonarr) and movies (Radarr) with advanced slash commands, interactive embeds, and dynamic module management.
 
 
 <p align="center">
-  <a href="https://kan.wayy.fr/wayy/requestarr">Roadmap</a>
+  <a href="https://kan.wayy.fr/dvmF95r4jD78VW/requestarr">Roadmap</a>
 </p>
 
 ## Features
