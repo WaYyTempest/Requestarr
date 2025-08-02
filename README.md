@@ -2,12 +2,12 @@
 
 A modern Discord bot for managing TV series (Sonarr) and movies (Radarr) with advanced slash commands, interactive embeds, and dynamic module management.
 
-
 <p align="center">
-  <a href="https://kan.wayy.fr/dvmF95r4jD78VW/requestarr">Roadmap</a>
+  <a href="https://kan.wayy.fr/roadmap/requestarr">Roadmap</a>
 </p>
 
 ## Features
+
 - 📺 Add, remove, and view calendar for Sonarr series
 - 🎬 Add, remove, and view calendar for Radarr movies
 - 🔍 Search MyAnimeList users and seasonal anime
@@ -25,18 +25,18 @@ services:
     image: wayytempest/requestarr
     restart: unless-stopped
     environment:
-    - SONARR_TOKEN=token
-    - SONARR_URL=http://localhost:8989
-    - RADARR_TOKEN=token
-    - RADARR_URL=http://localhost:7878
-    - TOKEN=token
-    - CLIENTID=clientid
-    - TraceError=false
-    - PUBLIC_ARR=false
-    - OWNER=id
-    - NODE_ENV=production
-    - NOTIF_ANIME=false
-    - REDIS_URL=redis:6379
+      - SONARR_TOKEN=token
+      - SONARR_URL=http://localhost:8989
+      - RADARR_TOKEN=token
+      - RADARR_URL=http://localhost:7878
+      - TOKEN=token
+      - CLIENTID=clientid
+      - TraceError=false
+      - PUBLIC_ARR=false
+      - OWNER=id
+      - NODE_ENV=production
+      - NOTIF_ANIME=false
+      - REDIS_URL=redis:6379
     depends_on:
       redis:
         condition: service_healthy
@@ -70,13 +70,16 @@ networks:
    - `npm run start`
 
 ## Usage
+
 - Use slash commands like `/sonarr add`, `/radarr add`, `/mal search`, `/daily`, `/module` directly in your Discord server.
 - For advanced management, use `/module` (owner only).
 
 ## Fork & Contribute
+
 - Fork on [Gitea](https://git.wayy.fr/WaYy/Requestarr.git) or [GitHub](https://github.com/WaYyTempest/Requestarr.git)
 - Clone your fork, create a branch, open a PR
 - Please respect the project structure and spirit
 
 ## License
+
 MIT License © 2025 WaYy Tempest
