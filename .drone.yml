@@ -14,3 +14,16 @@ steps:
       tags:
         - latest
         - ${DRONE_COMMIT_SHA:0:7}
+
+  - name: docker
+    image: plugins/docker
+    settings:
+      repo: wayytempest/requestarr
+      dockerfile: Dockerfile
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
+      tags:
+        - latest
+        - ${DRONE_COMMIT_SHA:0:7}
