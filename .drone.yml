@@ -1,20 +1,16 @@
 kind: pipeline
 name: build-and-deploy
 
-trigger:
-  branch:
-    - main
-
 steps:
-  - name: docker
+  - name: registry
     image: plugins/docker
     settings:
-      repo: wayytempest/requestarr
-      dockerfile: Dockerfile
+      registry: registry.wayy.fr
+      repo: registry.wayy.fr/wayy/requestarr
       username:
-        from_secret: docker_username
+        from_secret: quay_username
       password:
-        from_secret: docker_password
+        from_secret: quay_password
       tags:
         - latest
         - ${DRONE_COMMIT_SHA:0:7}
