@@ -6,6 +6,7 @@ import { formatDate } from "../utils/dateFormatter";
 import { generateASCII } from "../utils/generateASCII";
 import { setStatus } from "../utils/status";
 dotenv.config();
+const scheduleExpression = process.env.SCHEDULE_NOTIF ?? "0 1 * * *";
 
 module.exports = {
   name: "ready",
@@ -36,7 +37,7 @@ module.exports = {
     await setStatus(client);
     setInterval(() => setStatus(client), 3600000);
     // Schedule daily anime notification if enabled
-    cron.schedule("0 1 * * *", async () => {
+    cron.schedule(scheduleExpression, async () => {
       if (process.env.NOTIF_ANIME !== "false") {
         await sendAnimeScheduleWithButtons(client);
       }

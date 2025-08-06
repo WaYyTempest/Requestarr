@@ -22,6 +22,9 @@ Thumbs.db
 .git
 .gitignore
 
+# Github
+/.github
+
 # Environment & secrets
 .env
 .env.*
