@@ -6,7 +6,7 @@ import { formatDate } from "../utils/dateFormatter";
 import { generateASCII } from "../utils/generateASCII";
 import { setStatus } from "../utils/status";
 dotenv.config();
-const scheduleExpression = process.env.SCHEDULE_NOTIF ?? "0 1 * * *";
+const scheduleExpression = process.env.SCHEDULE_NOTIF ?? "0 8 * * *";
 
 module.exports = {
   name: "ready",
