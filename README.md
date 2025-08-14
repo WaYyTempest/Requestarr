@@ -17,6 +17,36 @@ A modern Discord bot for managing TV series (Sonarr) and movies (Radarr) with ad
 - 🔒 Owner/admin-only and public/private command control
 - 📈 Logging and error reporting
 
+## Environment Variables
+
+| Variable                 | Description                               | Required | Example                               |
+| ------------------------ | ----------------------------------------- | -------- | ------------------------------------- |
+| `TOKEN`                  | Discord bot token                         | Yes      | `TOKEN=token`                         |
+| `CLIENTID`               | Discord application client ID             | Yes      | `CLIENTID=clientid`                   |
+| `OWNER`                  | Discord user ID of the bot owner          | Yes      | `OWNER=id`                            |
+| `NODE_ENV`               | Environment mode (development/production) | Yes      | `NODE_ENV=production`                 |
+| `REDIS_URL`              | Redis connection URL for production mode  | Yes\*    | `REDIS_URL=localhost:6379`            |
+| `PUBLIC_ARR`             | Allow public access to \*arr commands     | No       | `PUBLIC_ARR=false`                    |
+| `TraceError`             | Enable detailed error reporting           | No       | `TraceError=false`                    |
+| `NOTIF_ANIME`            | Enable anime notification features        | No       | `NOTIF_ANIME=false`                   |
+| `SCHEDULE_NOTIF`         | Cron schedule for anime notifications     | No       | `SCHEDULE_NOTIF=0 1 * * *`            |
+| `SONARR_TOKEN`           | Sonarr API token                          | No       | `SONARR_TOKEN=token`                  |
+| `SONARR_URL`             | Sonarr server URL                         | No       | `SONARR_URL=http://localhost:8989`    |
+| `RADARR_TOKEN`           | Radarr API token                          | No       | `RADARR_TOKEN=token`                  |
+| `RADARR_URL`             | Radarr server URL                         | No       | `RADARR_URL=http://localhost:7878`    |
+| `JELLYSTAT_URL`          | Jellystat server URL                      | No       | `JELLYSTAT_URL=http://localhost:3000` |
+| `JELLYSTAT_TOKEN`        | Jellystat API token                       | No       | `JELLYSTAT_TOKEN=token`               |
+| `PROWLARR_URL`           | Prowlarr server URL                       | No       | `PROWLARR_URL=http://localhost:9696`  |
+| `PROWLARR_TOKEN`         | Prowlarr API token                        | No       | `PROWLARR_TOKEN=token`                |
+| `BOT_STATUS_DEV`         | Discord status in development mode        | No       | `BOT_STATUS_DEV=idle`                 |
+| `BOT_STATUS_PROD`        | Discord status in production mode         | No       | `BOT_STATUS_PROD=online`              |
+| `BOT_ACTIVITY_DEV`       | Discord activity name in development mode | No       | `BOT_ACTIVITY_DEV=Under Development`  |
+| `BOT_ACTIVITY_PROD`      | Discord activity name in production mode  | No       | `BOT_ACTIVITY_PROD=Self Hosted`       |
+| `BOT_ACTIVITY_TYPE_DEV`  | Discord activity type in development mode | No       | `BOT_ACTIVITY_TYPE_DEV=Playing`       |
+| `BOT_ACTIVITY_TYPE_PROD` | Discord activity type in production mode  | No       | `BOT_ACTIVITY_TYPE_PROD=Streaming`    |
+
+\*Required only in production mode
+
 ## Quick Start with Docker Compose
 
 ```yml
@@ -25,10 +55,6 @@ services:
     image: wayytempest/requestarr
     restart: unless-stopped
     environment:
-      - SONARR_TOKEN=token
-      - SONARR_URL=http://localhost:8989
-      - RADARR_TOKEN=token
-      - RADARR_URL=http://localhost:7878
       - TOKEN=token
       - CLIENTID=clientid
       - TraceError=false
@@ -65,9 +91,9 @@ networks:
 2. **Create and configure your `.env` file**
    - Copy `.env.example` to `.env` and fill in all required variables.
 3. **Install dependencies**
-   - `npm install`
+   - `bun install` or `npm install`
 4. **Build and start**
-   - `npm run start`
+   - `bun run start` or `npm run start`
 
 ## Usage
 
