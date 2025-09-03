@@ -1,5 +1,6 @@
 import dotenv from "dotenv";
 import cron from "node-cron";
+import packageInfo from "../../package.json";
 import { CustomClient } from "../Requestarr/customclient";
 import { sendAnimeScheduleWithButtons } from "../events/animeSchedule";
 import { formatDate } from "../utils/dateFormatter";
@@ -20,16 +21,40 @@ module.exports = {
     const eventCount = client.eventNames().length;
     console.clear();
     const asciiArt = generateASCII("Requestarr");
+    // Helper function to center text in the box
+    const centerText = (text: string, width: number = 67): string => {
+      const padding = Math.max(0, Math.floor((width - text.length) / 2));
+      return ' '.repeat(padding) + text + ' '.repeat(width - padding - text.length);
+    };
+
     const details = `
-[${formattedDate}] 🚀 ${client.user?.tag} is up and ready to serve
-
-[${formattedDate}] 📚 ${commandCount} commands successfully loaded
-
-[${formattedDate}] 🎭 ${eventCount} events successfully loaded
-
-[${formattedDate}] 🌐 Connected to ${serverCount} servers
-
-[${formattedDate}] ❤️ Developed by WaYy Tempest
+╭─────────────────────────────────────────────────────────────────────╮
+│${centerText('System Status')}│
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│${centerText(`🟢  Bot Ready    ${client.user?.tag}`)}│
+│${centerText(`📅  Timestamp    ${formattedDate}`)}│
+│                                                                     │
+├─────────────────────────────────────────────────────────────────────┤
+│${centerText('Statistics')}│
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│${centerText(`📚  Commands     ${commandCount}`)}│
+│${centerText(`🎭  Events       ${eventCount}`)}│
+│${centerText(`🌐  Servers      ${serverCount}`)}│
+│                                                                     │
+├─────────────────────────────────────────────────────────────────────┤
+│${centerText('Environment')}│
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│${centerText(`🔧  Mode         ${process.env.NODE_ENV || 'development'}`)}│
+│${centerText(`💾  Redis        ${process.env.NODE_ENV === 'production' ? 'Enabled' : 'Disabled'}`)}│
+│                                                                     │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│${centerText(`❤️   Developed by ${packageInfo.author}`)}│
+│                                                                     │
+╰─────────────────────────────────────────────────────────────────────╯
 `;
     console.log(`${asciiArt}\n${details}`);
 
