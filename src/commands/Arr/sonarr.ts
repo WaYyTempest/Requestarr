@@ -1,4 +1,3 @@
-import axios from "axios";
 import {
   ActionRowBuilder,
   ButtonBuilder,
@@ -13,11 +12,20 @@ import dotenv from "dotenv";
 import { createEmbedTemplate } from "../../modules/embed";
 import { CustomClient } from "../../Requestarr/customclient";
 import { logInfo } from "../../utils/logger";
+import { createSecureApiClient, validateEnvironmentVariable, sanitizeSearchQuery, validateTmdbId } from "../../utils/secure-api";
 
 dotenv.config();
 
-const SONARR_URL = `${process.env.SONARR_URL}/api/v3`;
-const SONARR_TOKEN = process.env.SONARR_TOKEN;
+const SONARR_URL = validateEnvironmentVariable('SONARR_URL', process.env.SONARR_URL);
+const SONARR_TOKEN = validateEnvironmentVariable('SONARR_TOKEN', process.env.SONARR_TOKEN);
+
+const sonarrClient = createSecureApiClient({
+  baseURL: `${SONARR_URL}/api/v3`,
+  apiKey: SONARR_TOKEN,
+  timeout: 30000,
+  maxContentLength: 5242880, // 5MB
+  retries: 2
+});
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -78,18 +86,24 @@ module.exports = {
         return interaction.reply({ embeds: [embed], ephemeral: true });
       }
       try {
+        const sanitizedQuery = sanitizeSearchQuery(query);
+        
         // Support TMDb ID as search term
-        let searchTerm = query;
-        if (/^\d+$/.test(query)) {
-          searchTerm = `tmdb:${query}`;
+        let searchTerm = sanitizedQuery;
+        if (/^\d+$/.test(sanitizedQuery)) {
+          if (!validateTmdbId(sanitizedQuery)) {
+            const embed = createEmbedTemplate(
+              "⚠️ » Invalid ID",
+              "The provided TMDb ID is invalid.",
+              interaction.user
+            ).setColor("Red");
+            return interaction.reply({ embeds: [embed], ephemeral: true });
+          }
+          searchTerm = `tmdb:${sanitizedQuery}`;
         }
+        
         // Search for the series in Sonarr
-        const searchUrl = `${SONARR_URL}/series/lookup?term=${encodeURIComponent(
-          searchTerm
-        )}`;
-        const { data } = await axios.get(searchUrl, {
-          headers: { "X-Api-Key": SONARR_TOKEN },
-        });
+        const { data } = await sonarrClient.get(`/series/lookup?term=${encodeURIComponent(searchTerm)}`);
 
         // No results found
         if (!data.length) {
@@ -102,10 +116,7 @@ module.exports = {
         }
 
         // Get the root folder path from Sonarr
-        const rootFoldersUrl = `${SONARR_URL}/rootfolder`;
-        const { data: rootFolders } = await axios.get(rootFoldersUrl, {
-          headers: { "X-Api-Key": SONARR_TOKEN },
-        });
+        const { data: rootFolders } = await sonarrClient.get('/rootfolder');
         const rootFolderPath = rootFolders[0]?.path;
         if (!rootFolderPath) {
           const embed = createEmbedTemplate(
@@ -119,10 +130,7 @@ module.exports = {
         if (data.length === 1) {
           const serie = data[0];
           // Check if the series already exists in the library
-          const seriesUrl = `${SONARR_URL}/series`;
-          const { data: allSeries } = await axios.get(seriesUrl, {
-            headers: { "X-Api-Key": SONARR_TOKEN },
-          });
+          const { data: allSeries } = await sonarrClient.get('/series');
           const alreadyExists = allSeries.some(
             (s: any) =>
               s.tvdbId === serie.tvdbId ||
@@ -138,7 +146,6 @@ module.exports = {
                 (s.tmdbId && serie.tmdbId && s.tmdbId === serie.tmdbId)
             );
             if (existingSerie && !existingSerie.monitored) {
-              const updateUrl = `${SONARR_URL}/series/${existingSerie.id}`;
               // Monitor all seasons except specials (seasonNumber === 0)
               const seasons = (existingSerie.seasons || []).map(
                 (season: any) => ({
@@ -146,12 +153,9 @@ module.exports = {
                   monitored: season.seasonNumber !== 0,
                 })
               );
-              await axios.put(
-                updateUrl,
-                { ...existingSerie, monitored: true, seasons },
-                {
-                  headers: { "X-Api-Key": SONARR_TOKEN },
-                }
+              await sonarrClient.put(
+                `/series/${existingSerie.id}`,
+                { ...existingSerie, monitored: true, seasons }
               );
               const embed = createEmbedTemplate(
                 "✅ » Monitoring Enabled",
@@ -170,7 +174,6 @@ module.exports = {
             }
           }
           // Add the series to Sonarr
-          const addUrl = `${SONARR_URL}/series`;
           const addPayload = {
             title: serie.title,
             qualityProfileId: 1,
@@ -182,9 +185,7 @@ module.exports = {
             monitored: true,
             addOptions: { searchForMissingEpisodes: true },
           };
-          await axios.post(addUrl, addPayload, {
-            headers: { "X-Api-Key": SONARR_TOKEN },
-          });
+          await sonarrClient.post('/series', addPayload);
           logInfo("SONARR", `${interaction.user.id} -> ${serie.title} -> add`);
           const embed = createEmbedTemplate(
             "✅ » Series Added",
@@ -246,7 +247,6 @@ module.exports = {
           if (i.customId === "next" && page < totalPages - 1) page++;
           if (i.customId === "grab") {
             const serie = data[page];
-            const addUrl = `${SONARR_URL}/series`;
             const addPayload = {
               title: serie.title,
               qualityProfileId: 1,
@@ -259,9 +259,7 @@ module.exports = {
               addOptions: { searchForMissingEpisodes: true },
             };
             try {
-              await axios.post(addUrl, addPayload, {
-                headers: { "X-Api-Key": SONARR_TOKEN },
-              });
+              await sonarrClient.post('/series', addPayload);
               logInfo(
                 "SONARR",
                 `${interaction.user.id} -> ${serie.title} -> add`
@@ -320,10 +318,7 @@ module.exports = {
       }
       try {
         // Fetch all series and find the one to remove
-        const seriesUrl = `${SONARR_URL}/series`;
-        const { data: allSeries } = await axios.get(seriesUrl, {
-          headers: { "X-Api-Key": SONARR_TOKEN },
-        });
+        const { data: allSeries } = await sonarrClient.get('/series');
         const found = allSeries.find(
           (s: any) => s.title.toLowerCase() === query.toLowerCase()
         );
@@ -337,10 +332,7 @@ module.exports = {
           return interaction.reply({ embeds: [embed], ephemeral: true });
         }
         // Remove the series from Sonarr
-        const deleteUrl = `${SONARR_URL}/series/${found.id}?deleteFiles=true&addImportListExclusion=false`;
-        await axios.delete(deleteUrl, {
-          headers: { "X-Api-Key": SONARR_TOKEN },
-        });
+        await sonarrClient.delete(`/series/${found.id}?deleteFiles=true&addImportListExclusion=false`);
         logInfo("SONARR", `${interaction.user.id} -> ${found.title} -> remove`);
         const embed = createEmbedTemplate(
           "✅ » Series Removed",
@@ -368,10 +360,7 @@ module.exports = {
         const start = today.toISOString().split("T")[0];
         const endDate = new Date(today.getTime() + 14 * 24 * 60 * 60 * 1000);
         const end = endDate.toISOString().split("T")[0];
-        const calendarUrl = `${SONARR_URL}/calendar?start=${start}&end=${end}`;
-        const { data: episodes } = await axios.get(calendarUrl, {
-          headers: { "X-Api-Key": SONARR_TOKEN },
-        });
+        const { data: episodes } = await sonarrClient.get(`/calendar?start=${start}&end=${end}`);
         if (!episodes.length) {
           // Reply if no episodes found
           const embed = new EmbedBuilder()

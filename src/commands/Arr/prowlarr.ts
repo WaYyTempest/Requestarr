@@ -1,4 +1,3 @@
-import axios from "axios";
 import {
   ActionRowBuilder,
   ButtonBuilder,
@@ -12,11 +11,20 @@ import {
 import dotenv from "dotenv";
 import { createEmbedTemplate } from "../../modules/embed";
 import { CustomClient } from "../../Requestarr/customclient";
+import { createSecureApiClient, validateEnvironmentVariable } from "../../utils/secure-api";
 
 dotenv.config();
 
-const PROWLARR_URL = `${process.env.PROWLARR_URL}/api/v1`;
-const PROWLARR_TOKEN = process.env.PROWLARR_TOKEN;
+const PROWLARR_URL = validateEnvironmentVariable('PROWLARR_URL', process.env.PROWLARR_URL);
+const PROWLARR_TOKEN = validateEnvironmentVariable('PROWLARR_TOKEN', process.env.PROWLARR_TOKEN);
+
+const prowlarrClient = createSecureApiClient({
+  baseURL: `${PROWLARR_URL}/api/v1`,
+  apiKey: PROWLARR_TOKEN,
+  timeout: 30000,
+  maxContentLength: 5242880, // 5MB
+  retries: 2
+});
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -46,10 +54,7 @@ module.exports = {
     const sub = interaction.options.getSubcommand();
     if (sub === "indexers") {
       try {
-        const indexersUrl = `${PROWLARR_URL}/indexer`;
-        const { data: indexers } = await axios.get(indexersUrl, {
-          headers: { "X-Api-Key": PROWLARR_TOKEN },
-        });
+        const { data: indexers } = await prowlarrClient.get('/indexer');
         if (!indexers.length) {
           const embed = new EmbedBuilder()
             .setTitle("📋 Prowlarr Indexers")
@@ -130,10 +135,7 @@ module.exports = {
       await interaction.deferReply({ ephemeral: true });
       try {
         // Test all indexers via /indexerproxy/testall (no body, only header)
-        const testUrl = `${PROWLARR_URL}/indexerproxy/testall`;
-        const { data: result } = await axios.post(testUrl, undefined, {
-          headers: { "X-Api-Key": PROWLARR_TOKEN },
-        });
+        const { data: result } = await prowlarrClient.post('/indexerproxy/testall');
         const embed = new EmbedBuilder()
           .setTitle("🧪 Test All Indexers")
           .setDescription(

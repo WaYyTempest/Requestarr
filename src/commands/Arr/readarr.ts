@@ -1,4 +1,3 @@
-import axios from "axios";
 import {
   ActionRowBuilder,
   ButtonBuilder,
@@ -13,11 +12,20 @@ import dotenv from "dotenv";
 import { createEmbedTemplate } from "../../modules/embed";
 import { CustomClient } from "../../Requestarr/customclient";
 import { logInfo } from "../../utils/logger";
+import { createSecureApiClient, validateEnvironmentVariable, sanitizeSearchQuery } from "../../utils/secure-api";
 
 dotenv.config();
 
-const READARR_URL = `${process.env.READARR_URL}/api/v1`;
-const READARR_TOKEN = process.env.READARR_TOKEN;
+const READARR_URL = validateEnvironmentVariable('READARR_URL', process.env.READARR_URL);
+const READARR_TOKEN = validateEnvironmentVariable('READARR_TOKEN', process.env.READARR_TOKEN);
+
+const readarrClient = createSecureApiClient({
+  baseURL: `${READARR_URL}/api/v1`,
+  apiKey: READARR_TOKEN,
+  timeout: 30000,
+  maxContentLength: 5242880, // 5MB
+  retries: 2
+});
 
 module.exports = {
   data: new SlashCommandBuilder()

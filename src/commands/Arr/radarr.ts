@@ -1,4 +1,3 @@
-import axios from "axios";
 import {
   ActionRowBuilder,
   ButtonBuilder,
@@ -13,11 +12,20 @@ import dotenv from "dotenv";
 import { createEmbedTemplate } from "../../modules/embed";
 import { CustomClient } from "../../Requestarr/customclient";
 import { logInfo } from "../../utils/logger";
+import { createSecureApiClient, validateEnvironmentVariable, sanitizeSearchQuery, validateTmdbId } from "../../utils/secure-api";
 
 dotenv.config();
 
-const RADARR_URL = `${process.env.RADARR_URL}/api/v3`;
-const RADARR_TOKEN = process.env.RADARR_TOKEN;
+const RADARR_URL = validateEnvironmentVariable('RADARR_URL', process.env.RADARR_URL);
+const RADARR_TOKEN = validateEnvironmentVariable('RADARR_TOKEN', process.env.RADARR_TOKEN);
+
+const radarrClient = createSecureApiClient({
+  baseURL: `${RADARR_URL}/api/v3`,
+  apiKey: RADARR_TOKEN,
+  timeout: 30000,
+  maxContentLength: 5242880, // 5MB
+  retries: 2
+});
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -72,18 +80,24 @@ module.exports = {
         return interaction.reply({ embeds: [embed], ephemeral: true });
       }
       try {
+        const sanitizedQuery = sanitizeSearchQuery(query);
+        
         // Support TMDb ID as search term
-        let searchTerm = query;
-        if (/^\d+$/.test(query)) {
-          searchTerm = `tmdb:${query}`;
+        let searchTerm = sanitizedQuery;
+        if (/^\d+$/.test(sanitizedQuery)) {
+          if (!validateTmdbId(sanitizedQuery)) {
+            const embed = createEmbedTemplate(
+              "``⚠️`` » Invalid ID",
+              "The provided TMDb ID is invalid.",
+              interaction.user
+            ).setColor("Red");
+            return interaction.reply({ embeds: [embed], ephemeral: true });
+          }
+          searchTerm = `tmdb:${sanitizedQuery}`;
         }
+        
         // Search for the movie in Radarr
-        const searchUrl = `${RADARR_URL}/movie/lookup?term=${encodeURIComponent(
-          searchTerm
-        )}`;
-        const { data } = await axios.get(searchUrl, {
-          headers: { "X-Api-Key": RADARR_TOKEN },
-        });
+        const { data } = await radarrClient.get(`/movie/lookup?term=${encodeURIComponent(searchTerm)}`);
 
         // No results found
         if (!data.length) {
@@ -96,10 +110,7 @@ module.exports = {
         }
 
         // Get the root folder path from Radarr
-        const rootFoldersUrl = `${RADARR_URL}/rootfolder`;
-        const { data: rootFolders } = await axios.get(rootFoldersUrl, {
-          headers: { "X-Api-Key": RADARR_TOKEN },
-        });
+        const { data: rootFolders } = await radarrClient.get('/rootfolder');
         const rootFolderPath = rootFolders[0]?.path;
         if (!rootFolderPath) {
           const embed = createEmbedTemplate(
@@ -111,10 +122,7 @@ module.exports = {
         }
 
         // Get a valid quality profile ID from Radarr
-        const qualityProfilesUrl = `${RADARR_URL}/qualityProfile`;
-        const { data: qualityProfiles } = await axios.get(qualityProfilesUrl, {
-          headers: { "X-Api-Key": RADARR_TOKEN },
-        });
+        const { data: qualityProfiles } = await radarrClient.get('/qualityProfile');
         const qualityProfileId = qualityProfiles[0]?.id;
         if (!qualityProfileId) {
           const embed = createEmbedTemplate(
@@ -128,10 +136,7 @@ module.exports = {
         if (data.length === 1) {
           const movie = data[0];
           // Check if the movie already exists in the library
-          const moviesUrl = `${RADARR_URL}/movie`;
-          const { data: allMovies } = await axios.get(moviesUrl, {
-            headers: { "X-Api-Key": RADARR_TOKEN },
-          });
+          const { data: allMovies } = await radarrClient.get('/movie');
           const alreadyExists = allMovies.some(
             (m: any) =>
               m.tmdbId === movie.tmdbId || m.titleSlug === movie.titleSlug
@@ -143,13 +148,9 @@ module.exports = {
                 m.tmdbId === movie.tmdbId || m.titleSlug === movie.titleSlug
             );
             if (existingMovie && !existingMovie.monitored) {
-              const updateUrl = `${RADARR_URL}/movie/${existingMovie.id}`;
-              await axios.put(
-                updateUrl,
-                { ...existingMovie, monitored: true },
-                {
-                  headers: { "X-Api-Key": RADARR_TOKEN },
-                }
+              await radarrClient.put(
+                `/movie/${existingMovie.id}`,
+                { ...existingMovie, monitored: true }
               );
               const embed = createEmbedTemplate(
                 "``✅`` » Monitoring Enabled",
@@ -168,7 +169,6 @@ module.exports = {
             }
           }
           // Add the movie to Radarr
-          const addUrl = `${RADARR_URL}/movie`;
           const addPayload = {
             title: movie.title,
             qualityProfileId: qualityProfileId,
@@ -181,9 +181,7 @@ module.exports = {
             addOptions: { searchForMovie: true },
           };
           try {
-            await axios.post(addUrl, addPayload, {
-              headers: { "X-Api-Key": RADARR_TOKEN },
-            });
+            await radarrClient.post('/movie', addPayload);
             const embed = createEmbedTemplate(
               "``✅`` » Movie Added",
               `Successfully added **${movie.title}** to Radarr!`,
@@ -258,10 +256,7 @@ module.exports = {
           if (i.customId === "grab") {
             const movie = data[page];
             // Check if the movie already exists in the library
-            const moviesUrl = `${RADARR_URL}/movie`;
-            const { data: allMovies } = await axios.get(moviesUrl, {
-              headers: { "X-Api-Key": RADARR_TOKEN },
-            });
+            const { data: allMovies } = await radarrClient.get('/movie');
             const alreadyExists = allMovies.some(
               (m: any) =>
                 m.tmdbId === movie.tmdbId || m.titleSlug === movie.titleSlug
@@ -272,13 +267,9 @@ module.exports = {
                   m.tmdbId === movie.tmdbId || m.titleSlug === movie.titleSlug
               );
               if (existingMovie && !existingMovie.monitored) {
-                const updateUrl = `${RADARR_URL}/movie/${existingMovie.id}`;
-                await axios.put(
-                  updateUrl,
-                  { ...existingMovie, monitored: true },
-                  {
-                    headers: { "X-Api-Key": RADARR_TOKEN },
-                  }
+                await radarrClient.put(
+                  `/movie/${existingMovie.id}`,
+                  { ...existingMovie, monitored: true }
                 );
                 const embed = createEmbedTemplate(
                   "``✅`` » Monitoring Enabled",
@@ -303,7 +294,6 @@ module.exports = {
               return;
             }
             // Add the movie to Radarr
-            const addUrl = `${RADARR_URL}/movie`;
             const addPayload = {
               title: movie.title,
               qualityProfileId: qualityProfileId,
@@ -316,9 +306,7 @@ module.exports = {
               addOptions: { searchForMovie: true },
             };
             try {
-              await axios.post(addUrl, addPayload, {
-                headers: { "X-Api-Key": RADARR_TOKEN },
-              });
+              await radarrClient.post('/movie', addPayload);
               const embed = createEmbedTemplate(
                 "``✅`` » Movie Added",
                 `Successfully added **${movie.title}** to Radarr!`,
@@ -385,10 +373,7 @@ module.exports = {
       }
       try {
         // Fetch all movies and find the one to remove
-        const moviesUrl = `${RADARR_URL}/movie`;
-        const { data: allMovies } = await axios.get(moviesUrl, {
-          headers: { "X-Api-Key": RADARR_TOKEN },
-        });
+        const { data: allMovies } = await radarrClient.get('/movie');
         const found = allMovies.find(
           (m: any) => m.title.toLowerCase() === query.toLowerCase()
         );
@@ -402,10 +387,7 @@ module.exports = {
           return interaction.reply({ embeds: [embed], ephemeral: true });
         }
         // Remove the movie from Radarr
-        const deleteUrl = `${RADARR_URL}/movie/${found.id}?deleteFiles=true&addImportListExclusion=false`;
-        await axios.delete(deleteUrl, {
-          headers: { "X-Api-Key": RADARR_TOKEN },
-        });
+        await radarrClient.delete(`/movie/${found.id}?deleteFiles=true&addImportListExclusion=false`);
         const embed = createEmbedTemplate(
           "``✅`` » Movie Removed",
           `Movie **${found.title}** has been removed from Radarr.`,
@@ -432,10 +414,7 @@ module.exports = {
         const start = today.toISOString().split("T")[0];
         const endDate = new Date(today.getTime() + 14 * 24 * 60 * 60 * 1000);
         const end = endDate.toISOString().split("T")[0];
-        const calendarUrl = `${RADARR_URL}/calendar?start=${start}&end=${end}`;
-        const { data: movies } = await axios.get(calendarUrl, {
-          headers: { "X-Api-Key": RADARR_TOKEN },
-        });
+        const { data: movies } = await radarrClient.get(`/calendar?start=${start}&end=${end}`);
         if (!movies.length) {
           // Reply if no movies found
           const embed = new EmbedBuilder()
