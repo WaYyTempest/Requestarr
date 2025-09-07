@@ -10,7 +10,7 @@ dotenv.config();
 const scheduleExpression = process.env.SCHEDULE_NOTIF ?? "0 8 * * *";
 
 module.exports = {
-  name: "ready",
+  name: "clientReady",
   once: true,
   async execute(client: CustomClient) {
     // Fetch all application commands and print startup info
