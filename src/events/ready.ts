@@ -3,6 +3,7 @@ import cron from "node-cron";
 import packageInfo from "../../package.json";
 import { CustomClient } from "../Requestarr/customclient";
 import { sendAnimeScheduleWithButtons } from "../events/animeSchedule";
+import { sendMovieScheduleWithButtons } from "../events/movieSchedule";
 import { formatDate } from "../utils/dateFormatter";
 import { generateASCII } from "../utils/generateASCII";
 import { setStatus } from "../utils/status";
@@ -61,10 +62,13 @@ module.exports = {
     // Set the bot's status and update it every hour
     await setStatus(client);
     setInterval(() => setStatus(client), 3600000);
-    // Schedule daily anime notification if enabled
+    // Schedule daily notifications if enabled
     cron.schedule(scheduleExpression, async () => {
       if (process.env.NOTIF_ANIME !== "false") {
         await sendAnimeScheduleWithButtons(client);
+      }
+      if (process.env.NOTIF_MOVIES !== "false" && process.env.RADARR_URL && process.env.RADARR_TOKEN) {
+        await sendMovieScheduleWithButtons(client);
       }
     });
   },
