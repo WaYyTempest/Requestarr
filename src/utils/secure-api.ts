@@ -67,8 +67,8 @@ class SecureApiClient {
     }
 
     const url = new URL(config.baseURL);
-    if (url.protocol !== "https:") {
-      throw new Error("Only HTTPS URLs are allowed");
+    if (url.protocol !== "https:" && url.protocol !== "http:") {
+      throw new Error("Only HTTP and HTTPS URLs are allowed");
     }
 
     if (!config.apiKey || config.apiKey.length < 10) {
