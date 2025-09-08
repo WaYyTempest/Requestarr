@@ -211,3 +211,41 @@ mono_crash.*
 *.pb.go
 *.pb.cc
 *.pb.h
+
+# AI Assistant Modules
+
+# Claude
+.claude/
+
+# Cursor
+.cursor/
+
+# Aider
+.aider/
+
+# Codeium
+.codeium/
+
+# GitHub Copilot
+.github-copilot/
+
+# TabNine
+.tabnine/
+
+# Kite
+.kite/
+
+# Windmill
+.windmill/
+
+# Continue
+.continue/
+
+# Sourcery
+.sourcery/
+
+# DeepCode
+.deepcode/
+
+# CodeGuru
+.codeguru/
