@@ -8,6 +8,7 @@ import {
   GuildMember,
   SlashCommandBuilder,
 } from "discord.js";
+import axios from "axios";
 import dotenv from "dotenv";
 import { createEmbedTemplate } from "../../modules/embed";
 import { CustomClient } from "../../Requestarr/customclient";
