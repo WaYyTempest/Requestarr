@@ -99,7 +99,17 @@ ${steps}
 <!-- Add any additional context, screenshots, or logs here -->`
       );
 
-      const githubUrl = `https://github.com/WaYyTempest/Requestarr/issues/new?labels=bug&template=bug_report.md&title=${encodeURIComponent(`🐛 ${title}`)}&body=${issueBody}`;
+      let githubUrl = `https://github.com/WaYyTempest/Requestarr/issues/new?labels=bug&template=bug_report.md&title=${encodeURIComponent(`🐛 ${title}`)}&body=${issueBody}`;
+      
+      // Truncate URL if it exceeds Discord's 512 character limit for button URLs
+      if (githubUrl.length > 512) {
+        const baseUrl = 'https://github.com/WaYyTempest/Requestarr/issues/new?labels=bug&template=bug_report.md';
+        const titleParam = `&title=${encodeURIComponent(`🐛 ${title}`)}`;
+        const remainingChars = 512 - baseUrl.length - titleParam.length - 6; // 6 for "&body="
+        
+        const truncatedBody = issueBody.substring(0, remainingChars - 20) + encodeURIComponent('...\n\n[Content truncated - please provide full details in the issue]');
+        githubUrl = `${baseUrl}${titleParam}&body=${truncatedBody}`;
+      }
 
       const embed = createEmbedTemplate(
         "🐛 Bug Report",
@@ -146,7 +156,17 @@ ${useCase}
 <!-- Add any additional context, mockups, or examples here -->`
       );
 
-      const githubUrl = `https://github.com/WaYyTempest/Requestarr/issues/new?labels=feature%20request&template=feature_request.md&title=${encodeURIComponent(`✨ ${title}`)}&body=${issueBody}`;
+      let githubUrl = `https://github.com/WaYyTempest/Requestarr/issues/new?labels=feature%20request&template=feature_request.md&title=${encodeURIComponent(`✨ ${title}`)}&body=${issueBody}`;
+      
+      // Truncate URL if it exceeds Discord's 512 character limit for button URLs
+      if (githubUrl.length > 512) {
+        const baseUrl = 'https://github.com/WaYyTempest/Requestarr/issues/new?labels=feature%20request&template=feature_request.md';
+        const titleParam = `&title=${encodeURIComponent(`✨ ${title}`)}`;
+        const remainingChars = 512 - baseUrl.length - titleParam.length - 6; // 6 for "&body="
+        
+        const truncatedBody = issueBody.substring(0, remainingChars - 20) + encodeURIComponent('...\n\n[Content truncated - please provide full details in the issue]');
+        githubUrl = `${baseUrl}${titleParam}&body=${truncatedBody}`;
+      }
 
       const embed = createEmbedTemplate(
         "✨ Feature Request",
