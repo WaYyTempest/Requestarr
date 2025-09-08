@@ -216,36 +216,117 @@ mono_crash.*
 
 # Claude
 .claude/
+CLAUDE.md
+.claude-code/
+.claude_history
+claude-*.json
+claude.config.json
 
 # Cursor
 .cursor/
-
-# Aider
-.aider/
-
-# Codeium
-.codeium/
+.cursorrules
+cursor.config.json
+.cursor-tutor/
+.cursor-settings/
 
 # GitHub Copilot
 .github-copilot/
+.copilot/
+copilot-*.json
+.copilot-settings
 
-# TabNine
+# Codeium
+.codeium/
+codeium.config.json
+.codeium-settings/
+codeium-*.json
+
+# Tabnine
 .tabnine/
+.TabNine/
+tabnine-*.json
+tabnine.config.json
 
-# Kite
-.kite/
-
-# Windmill
-.windmill/
-
-# Continue
+# Continue.dev
 .continue/
+continue.config.json
+.continue-settings/
+
+# Aider
+.aider/
+.aider.conf.yml
+.aider.settings.yml
+aider-*.json
 
 # Sourcery
 .sourcery/
+.sourcery.yaml
+sourcery.config.json
 
-# DeepCode
+# Kite
+.kite/
+kite-*.json
+
+# Windmill
+.windmill/
+windmill.config.json
+
+# DeepCode (Snyk Code)
 .deepcode/
+.snyk
+snyk-*.json
 
-# CodeGuru
+# Amazon CodeGuru
 .codeguru/
+codeguru-*.json
+
+# JetBrains AI
+.ai/
+ai-settings.xml
+
+# Replit Ghostwriter
+.replit/
+replit-ai/
+
+# CodeT5/Salesforce
+.codet5/
+
+# OpenAI Codex
+.codex/
+codex-*.json
+
+# Hugging Face
+.huggingface/
+hf-*.json
+
+# Microsoft IntelliCode
+.intellicode/
+intellicode-*.json
+
+# AWS CodeWhisperer
+.codewhisperer/
+codewhisperer-*.json
+
+# Mintlify
+.mintlify/
+mint.json
+mintlify-*.json
+
+# Cody (Sourcegraph)
+.cody/
+cody.config.json
+
+# Bito
+.bito/
+bito-*.json
+
+# AI Code Review Tools
+.codacy/
+.codebeat/
+.codeclimate/
+
+# Various AI temp files
+ai-*.tmp
+*.ai-temp
+ai-session-*
+ai-cache-*

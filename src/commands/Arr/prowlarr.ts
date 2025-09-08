@@ -15,16 +15,20 @@ import { createSecureApiClient, validateEnvironmentVariable } from "../../utils/
 
 dotenv.config();
 
-const PROWLARR_URL = validateEnvironmentVariable('PROWLARR_URL', process.env.PROWLARR_URL);
-const PROWLARR_TOKEN = validateEnvironmentVariable('PROWLARR_TOKEN', process.env.PROWLARR_TOKEN);
+const PROWLARR_URL = validateEnvironmentVariable('PROWLARR_URL', process.env.PROWLARR_URL, false);
+const PROWLARR_TOKEN = validateEnvironmentVariable('PROWLARR_TOKEN', process.env.PROWLARR_TOKEN, false);
 
-const prowlarrClient = createSecureApiClient({
-  baseURL: `${PROWLARR_URL}/api/v1`,
-  apiKey: PROWLARR_TOKEN,
-  timeout: 30000,
-  maxContentLength: 5242880, // 5MB
-  retries: 2
-});
+let prowlarrClient: ReturnType<typeof createSecureApiClient> | null = null;
+
+if (PROWLARR_URL && PROWLARR_TOKEN) {
+  prowlarrClient = createSecureApiClient({
+    baseURL: `${PROWLARR_URL}/api/v1`,
+    apiKey: PROWLARR_TOKEN,
+    timeout: 30000,
+    maxContentLength: 5242880, // 5MB
+    retries: 2
+  });
+}
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -40,6 +44,16 @@ module.exports = {
     client: CustomClient,
     interaction: ChatInputCommandInteraction & { member: GuildMember }
   ) => {
+    // Check if Prowlarr is configured
+    if (!prowlarrClient) {
+      const embed = createEmbedTemplate(
+        "Service Unavailable",
+        "Prowlarr is not configured. Please set PROWLARR_URL and PROWLARR_TOKEN environment variables.",
+        interaction.user
+      ).setColor("Red");
+      return interaction.reply({ embeds: [embed], ephemeral: true });
+    }
+
     if (
       process.env.PUBLIC_ARR !== "true" &&
       interaction.user.id !== process.env.OWNER

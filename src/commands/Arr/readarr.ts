@@ -17,16 +17,20 @@ import { createSecureApiClient, validateEnvironmentVariable, sanitizeSearchQuery
 
 dotenv.config();
 
-const READARR_URL = validateEnvironmentVariable('READARR_URL', process.env.READARR_URL);
-const READARR_TOKEN = validateEnvironmentVariable('READARR_TOKEN', process.env.READARR_TOKEN);
+const READARR_URL = validateEnvironmentVariable('READARR_URL', process.env.READARR_URL, false);
+const READARR_TOKEN = validateEnvironmentVariable('READARR_TOKEN', process.env.READARR_TOKEN, false);
 
-const readarrClient = createSecureApiClient({
-  baseURL: `${READARR_URL}/api/v1`,
-  apiKey: READARR_TOKEN,
-  timeout: 30000,
-  maxContentLength: 5242880, // 5MB
-  retries: 2
-});
+let readarrClient: ReturnType<typeof createSecureApiClient> | null = null;
+
+if (READARR_URL && READARR_TOKEN) {
+  readarrClient = createSecureApiClient({
+    baseURL: `${READARR_URL}/api/v1`,
+    apiKey: READARR_TOKEN,
+    timeout: 30000,
+    maxContentLength: 5242880, // 5MB
+    retries: 2
+  });
+}
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -58,6 +62,16 @@ module.exports = {
     client: CustomClient,
     interaction: ChatInputCommandInteraction & { member: GuildMember }
   ) => {
+    // Check if Readarr is configured
+    if (!readarrClient) {
+      const embed = createEmbedTemplate(
+        "Service Unavailable",
+        "Readarr is not configured. Please set READARR_URL and READARR_TOKEN environment variables.",
+        interaction.user
+      ).setColor("Red");
+      return interaction.reply({ embeds: [embed], ephemeral: true });
+    }
+
     // Restrict command to owner if PUBLIC_ARR is not enabled
     if (
       process.env.PUBLIC_ARR !== "true" &&

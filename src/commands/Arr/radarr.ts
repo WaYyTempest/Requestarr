@@ -16,16 +16,20 @@ import { createSecureApiClient, validateEnvironmentVariable, sanitizeSearchQuery
 
 dotenv.config();
 
-const RADARR_URL = validateEnvironmentVariable('RADARR_URL', process.env.RADARR_URL);
-const RADARR_TOKEN = validateEnvironmentVariable('RADARR_TOKEN', process.env.RADARR_TOKEN);
+const RADARR_URL = validateEnvironmentVariable('RADARR_URL', process.env.RADARR_URL, false);
+const RADARR_TOKEN = validateEnvironmentVariable('RADARR_TOKEN', process.env.RADARR_TOKEN, false);
 
-const radarrClient = createSecureApiClient({
-  baseURL: `${RADARR_URL}/api/v3`,
-  apiKey: RADARR_TOKEN,
-  timeout: 30000,
-  maxContentLength: 5242880, // 5MB
-  retries: 2
-});
+let radarrClient: ReturnType<typeof createSecureApiClient> | null = null;
+
+if (RADARR_URL && RADARR_TOKEN) {
+  radarrClient = createSecureApiClient({
+    baseURL: `${RADARR_URL}/api/v3`,
+    apiKey: RADARR_TOKEN,
+    timeout: 30000,
+    maxContentLength: 5242880, // 5MB
+    retries: 2
+  });
+}
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -54,6 +58,16 @@ module.exports = {
     client: CustomClient,
     interaction: ChatInputCommandInteraction & { member: GuildMember }
   ) => {
+    // Check if Radarr is configured
+    if (!radarrClient) {
+      const embed = createEmbedTemplate(
+        "Service Unavailable",
+        "Radarr is not configured. Please set RADARR_URL and RADARR_TOKEN environment variables.",
+        interaction.user
+      ).setColor("Red");
+      return interaction.reply({ embeds: [embed], ephemeral: true });
+    }
+
     // Restrict command to owner if PUBLIC_ARR is not enabled
     if (
       process.env.PUBLIC_ARR !== "true" &&

@@ -48,8 +48,13 @@ function initializeRadarrClient(): boolean {
       return false;
     }
 
-    const RADARR_URL = validateEnvironmentVariable('RADARR_URL', process.env.RADARR_URL);
-    const RADARR_TOKEN = validateEnvironmentVariable('RADARR_TOKEN', process.env.RADARR_TOKEN);
+    const RADARR_URL = validateEnvironmentVariable('RADARR_URL', process.env.RADARR_URL, false);
+    const RADARR_TOKEN = validateEnvironmentVariable('RADARR_TOKEN', process.env.RADARR_TOKEN, false);
+
+    if (!RADARR_URL || !RADARR_TOKEN) {
+      console.warn("⚠️ Radarr configuration validation failed - MovieSchedule disabled");
+      return false;
+    }
 
     radarrClient = createSecureApiClient({
       baseURL: `${RADARR_URL}/api/v3`,

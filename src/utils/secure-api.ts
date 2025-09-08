@@ -231,9 +231,12 @@ export function createSecureApiClient(config: SecureApiConfig): SecureApiClient 
 }
 
 // Validation utilities
-export function validateEnvironmentVariable(name: string, value: string | undefined): string {
+export function validateEnvironmentVariable(name: string, value: string | undefined, required: boolean = true): string | undefined {
   if (!value || value.trim() === '') {
-    throw new Error(`Environment variable ${name} is required`);
+    if (required) {
+      throw new Error(`Environment variable ${name} is required`);
+    }
+    return undefined;
   }
   
   if (name.includes('TOKEN') || name.includes('KEY')) {
@@ -245,8 +248,8 @@ export function validateEnvironmentVariable(name: string, value: string | undefi
   if (name.includes('URL')) {
     try {
       const url = new URL(value);
-      if (url.protocol !== 'https:') {
-        throw new Error(`Environment variable ${name} must use HTTPS`);
+      if (url.protocol !== 'https:' && url.protocol !== 'http:') {
+        throw new Error(`Environment variable ${name} must use HTTP or HTTPS`);
       }
     } catch {
       throw new Error(`Environment variable ${name} is not a valid URL`);

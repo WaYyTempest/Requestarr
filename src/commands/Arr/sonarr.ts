@@ -16,16 +16,20 @@ import { createSecureApiClient, validateEnvironmentVariable, sanitizeSearchQuery
 
 dotenv.config();
 
-const SONARR_URL = validateEnvironmentVariable('SONARR_URL', process.env.SONARR_URL);
-const SONARR_TOKEN = validateEnvironmentVariable('SONARR_TOKEN', process.env.SONARR_TOKEN);
+const SONARR_URL = validateEnvironmentVariable('SONARR_URL', process.env.SONARR_URL, false);
+const SONARR_TOKEN = validateEnvironmentVariable('SONARR_TOKEN', process.env.SONARR_TOKEN, false);
 
-const sonarrClient = createSecureApiClient({
-  baseURL: `${SONARR_URL}/api/v3`,
-  apiKey: SONARR_TOKEN,
-  timeout: 30000,
-  maxContentLength: 5242880, // 5MB
-  retries: 2
-});
+let sonarrClient: ReturnType<typeof createSecureApiClient> | null = null;
+
+if (SONARR_URL && SONARR_TOKEN) {
+  sonarrClient = createSecureApiClient({
+    baseURL: `${SONARR_URL}/api/v3`,
+    apiKey: SONARR_TOKEN,
+    timeout: 30000,
+    maxContentLength: 5242880, // 5MB
+    retries: 2
+  });
+}
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -60,6 +64,16 @@ module.exports = {
     client: CustomClient,
     interaction: ChatInputCommandInteraction & { member: GuildMember }
   ) => {
+    // Check if Sonarr is configured
+    if (!sonarrClient) {
+      const embed = createEmbedTemplate(
+        "Service Unavailable",
+        "Sonarr is not configured. Please set SONARR_URL and SONARR_TOKEN environment variables.",
+        interaction.user
+      ).setColor("Red");
+      return interaction.reply({ embeds: [embed], ephemeral: true });
+    }
+
     // Restrict command to owner if PUBLIC_ARR is not enabled
     if (
       process.env.PUBLIC_ARR !== "true" &&
