@@ -1,5 +1,8 @@
 blank_issues_enabled: false
 contact_links:
-  - name: ❓ Help and Support Discord Channel
+  - name: 💬 Discord Support Server
     url: https://discord.wayy.fr
-    about: Please ask and answer questions here. 🏥
+    about: Get help, ask questions, and discuss Requestarr with the community
+  - name: ❓ FAQ & Troubleshooting
+    url: https://github.com/WaYyTempest/Requestarr/discussions
+    about: Check frequently asked questions and common issues
