@@ -3,8 +3,6 @@ import {
   ButtonBuilder,
   ButtonStyle,
   ChatInputCommandInteraction,
-  EmbedBuilder,
-  GuildMember,
   SlashCommandBuilder,
 } from "discord.js";
 import { createEmbedTemplate } from "../modules/embed";
@@ -13,7 +11,7 @@ import { CustomClient } from "../Requestarr/customclient";
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("report")
-    .setDescription("🐛 Report a bug or request a feature on GitHub")
+    .setDescription("🐛 Report issues or ✨ request features")
     .addSubcommand((sub) =>
       sub
         .setName("bug")
@@ -21,101 +19,104 @@ module.exports = {
         .addStringOption((option) =>
           option
             .setName("title")
-            .setDescription("Brief description of the bug")
+            .setDescription("🏷️ Bug title")
             .setRequired(true)
             .setMaxLength(100)
         )
         .addStringOption((option) =>
           option
             .setName("description")
-            .setDescription("Detailed description of what happened")
+            .setDescription("📝 Describe the issue")
             .setRequired(true)
-            .setMaxLength(500)
+            .setMaxLength(1000)
         )
         .addStringOption((option) =>
           option
             .setName("steps")
-            .setDescription("Steps to reproduce the bug")
-            .setRequired(false)
-            .setMaxLength(300)
+            .setDescription("🔄 Reproduction steps")
+            .setRequired(true)
+            .setMaxLength(500)
         )
     )
     .addSubcommand((sub) =>
       sub
         .setName("feature")
-        .setDescription("✨ Request a new feature")
+        .setDescription("✨ Request a feature")
         .addStringOption((option) =>
           option
             .setName("title")
-            .setDescription("Brief description of the feature")
+            .setDescription("🏷️ Feature title")
             .setRequired(true)
             .setMaxLength(100)
         )
         .addStringOption((option) =>
           option
             .setName("description")
-            .setDescription("Detailed description of the requested feature")
+            .setDescription("💡 Feature description")
             .setRequired(true)
-            .setMaxLength(500)
+            .setMaxLength(1000)
         )
         .addStringOption((option) =>
           option
-            .setName("use_case")
-            .setDescription("Why would this feature be useful?")
+            .setName("benefits")
+            .setDescription("✨ Why is this useful?")
             .setRequired(false)
-            .setMaxLength(300)
+            .setMaxLength(500)
         )
     ),
-
   execute: async (
     client: CustomClient,
-    interaction: ChatInputCommandInteraction & { member: GuildMember }
+    interaction: ChatInputCommandInteraction
   ) => {
     const subcommand = interaction.options.getSubcommand();
-    const title = interaction.options.getString("title")!;
-    const description = interaction.options.getString("description")!;
+    const title = interaction.options.getString("title");
+    const description = interaction.options.getString("description");
 
-    if (subcommand === "bug") {
-      const steps = interaction.options.getString("steps") || "Not provided";
-      
-      // Create GitHub issue URL with pre-filled template
-      const issueBody = encodeURIComponent(
-        `## 🐛 Bug Description
-${description}
-
-## 📝 Steps to Reproduce
-${steps}
-
-## 🔍 Expected Behavior
-<!-- Describe what you expected to happen -->
-
-## 💻 Environment
-- **User ID**: ${interaction.user.id}
-- **Guild ID**: ${interaction.guildId}
-- **Timestamp**: ${new Date().toISOString()}
-- **Bot Version**: Latest
-
-## 📎 Additional Information
-<!-- Add any additional context, screenshots, or logs here -->`
-      );
-
-      let githubUrl = `https://github.com/WaYyTempest/Requestarr/issues/new?labels=bug&template=bug_report.md&title=${encodeURIComponent(`🐛 ${title}`)}&body=${issueBody}`;
-      
-      // Truncate URL if it exceeds Discord's 512 character limit for button URLs
-      if (githubUrl.length > 512) {
-        const baseUrl = 'https://github.com/WaYyTempest/Requestarr/issues/new?labels=bug&template=bug_report.md';
-        const titleParam = `&title=${encodeURIComponent(`🐛 ${title}`)}`;
-        const remainingChars = 512 - baseUrl.length - titleParam.length - 6; // 6 for "&body="
-        
-        const truncatedBody = issueBody.substring(0, remainingChars - 20) + encodeURIComponent('...\n\n[Content truncated - please provide full details in the issue]');
-        githubUrl = `${baseUrl}${titleParam}&body=${truncatedBody}`;
-      }
-
+    if (!title || !description) {
       const embed = createEmbedTemplate(
-        "🐛 Bug Report",
-        `**Title:** ${title}\n**Description:** ${description.substring(0, 100)}${description.length > 100 ? "..." : ""}\n\nClick the button below to create the issue on GitHub with pre-filled information.`,
+        "❌ Missing Information",
+        "Title and description are required.",
         interaction.user
       ).setColor("Red");
+
+      return interaction.reply({
+        embeds: [embed],
+        ephemeral: true,
+      });
+    }
+
+    if (subcommand === "bug") {
+      const steps = interaction.options.getString("steps");
+
+      if (!steps) {
+        const embed = createEmbedTemplate(
+          "❌ Missing Information",
+          "Steps are required for bug reports.",
+          interaction.user
+        ).setColor("Red");
+
+        return interaction.reply({
+          embeds: [embed],
+          ephemeral: true,
+        });
+      }
+
+      // Create GitHub URL with pre-filled data
+      const params = new URLSearchParams({
+        template: 'bug_report.yaml',
+        labels: 'bug',
+        title: `🐛 [BUG] - ${title}`,
+        description: encodeURIComponent(description),
+        reprod: encodeURIComponent(steps)
+      });
+      
+      const githubUrl = `https://github.com/WaYyTempest/Requestarr/issues/new?${params.toString()}`;
+
+      const embed = createEmbedTemplate(
+        "🐛 Bug Report Ready",
+        `**🏷️ Title:** \`\`${title}\`\`\n**📝 Description:** \`\`${description.substring(0, 100)}${description.length > 100 ? '...' : ''}\`\`\n**🔄 Steps:** \`\`${steps.substring(0, 100)}${steps.length > 100 ? '...' : ''}\`\`\n\n🚀 Click the button below to create a GitHub issue with pre-filled data.`,
+        interaction.user
+      ).setColor("#DC143C");
 
       const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
         new ButtonBuilder()
@@ -132,47 +133,27 @@ ${steps}
     }
 
     if (subcommand === "feature") {
-      const useCase = interaction.options.getString("use_case") || "Not provided";
+      const benefits = interaction.options.getString("benefits");
+
+      // Create GitHub URL with pre-filled data
+      const params = new URLSearchParams({
+        template: 'feature_request.yaml',
+        labels: 'enhancement',
+        title: `💡 [FEAT] - ${title}`,
+        feature: encodeURIComponent(description)
+      });
       
-      // Create GitHub issue URL with pre-filled template
-      const issueBody = encodeURIComponent(
-        `## ✨ Feature Description
-${description}
-
-## 🎯 Use Case
-${useCase}
-
-## 💡 Proposed Solution
-<!-- Describe how you think this feature should work -->
-
-## 🔄 Alternatives Considered
-<!-- Describe any alternative solutions you've considered -->
-
-## 📋 Additional Context
-- **Requested by**: ${interaction.user.tag} (${interaction.user.id})
-- **Guild ID**: ${interaction.guildId}
-- **Timestamp**: ${new Date().toISOString()}
-
-<!-- Add any additional context, mockups, or examples here -->`
-      );
-
-      let githubUrl = `https://github.com/WaYyTempest/Requestarr/issues/new?labels=feature%20request&template=feature_request.md&title=${encodeURIComponent(`✨ ${title}`)}&body=${issueBody}`;
-      
-      // Truncate URL if it exceeds Discord's 512 character limit for button URLs
-      if (githubUrl.length > 512) {
-        const baseUrl = 'https://github.com/WaYyTempest/Requestarr/issues/new?labels=feature%20request&template=feature_request.md';
-        const titleParam = `&title=${encodeURIComponent(`✨ ${title}`)}`;
-        const remainingChars = 512 - baseUrl.length - titleParam.length - 6; // 6 for "&body="
-        
-        const truncatedBody = issueBody.substring(0, remainingChars - 20) + encodeURIComponent('...\n\n[Content truncated - please provide full details in the issue]');
-        githubUrl = `${baseUrl}${titleParam}&body=${truncatedBody}`;
+      if (benefits) {
+        params.set('benefits', encodeURIComponent(benefits));
       }
+      
+      const githubUrl = `https://github.com/WaYyTempest/Requestarr/issues/new?${params.toString()}`;
 
       const embed = createEmbedTemplate(
-        "✨ Feature Request",
-        `**Title:** ${title}\n**Description:** ${description.substring(0, 100)}${description.length > 100 ? "..." : ""}\n\nClick the button below to create the feature request on GitHub with pre-filled information.`,
+        "✨ Feature Request Ready",
+        `**🏷️ Title:** \`\`${title}\`\`\n**💡 Description:** \`\`${description.substring(0, 100)}${description.length > 100 ? '...' : ''}\`\`${benefits ? `\n**✨ Benefits:** \`\`${benefits.substring(0, 100)}${benefits.length > 100 ? '...' : ''}\`\`` : ''}\n\n🚀 Click the button below to create a GitHub issue with pre-filled data.`,
         interaction.user
-      ).setColor("Green");
+      ).setColor("#32CD32");
 
       const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
         new ButtonBuilder()
@@ -187,7 +168,17 @@ ${useCase}
         ephemeral: true,
       });
     }
-  },
 
-  cooldown: 30, // 30 seconds cooldown to prevent spam
+    const embed = createEmbedTemplate(
+      "❌ Unknown Subcommand",
+      "🤔 Please use `/report bug` or `/report feature`.",
+      interaction.user
+    ).setColor("Red");
+
+    return interaction.reply({
+      embeds: [embed],
+      ephemeral: true,
+    });
+  },
+  cooldown: 30,
 };
