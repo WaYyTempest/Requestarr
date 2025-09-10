@@ -10,6 +10,8 @@ services:
       - OWNER=id
       - NODE_ENV=production
       - NOTIF_ANIME=false
+      - MOVIE_SCHEDULE_NOTIF=false
+      - SERIES_SCHEDULE_NOTIF=false
       - REDIS_URL=redis:6379
     depends_on:
       redis:

@@ -30,6 +30,8 @@ A modern Discord bot for managing TV series (Sonarr) and movies (Radarr) with ad
 | `TraceError`             | Enable detailed error reporting           | No       | `TraceError=false`                    |
 | `NOTIF_ANIME`            | Enable anime notification features        | No       | `NOTIF_ANIME=false`                   |
 | `SCHEDULE_NOTIF`         | Cron schedule for anime notifications     | No       | `SCHEDULE_NOTIF=0 1 * * *`            |
+| `MOVIE_SCHEDULE_NOTIF`   | Enable movie schedule notifications       | No       | `MOVIE_SCHEDULE_NOTIF=false`          |
+| `SERIES_SCHEDULE_NOTIF`  | Enable series schedule notifications      | No       | `SERIES_SCHEDULE_NOTIF=false`         |
 | `SONARR_TOKEN`           | Sonarr API token                          | No       | `SONARR_TOKEN=token`                  |
 | `SONARR_URL`             | Sonarr server URL                         | No       | `SONARR_URL=http://localhost:8989`    |
 | `RADARR_TOKEN`           | Radarr API token                          | No       | `RADARR_TOKEN=token`                  |
@@ -62,6 +64,8 @@ services:
       - OWNER=id
       - NODE_ENV=production
       - NOTIF_ANIME=false
+      - MOVIE_SCHEDULE_NOTIF=false
+      - SERIES_SCHEDULE_NOTIF=false
       - REDIS_URL=redis:6379
     depends_on:
       redis:
